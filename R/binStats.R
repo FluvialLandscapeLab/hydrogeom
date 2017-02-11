@@ -35,11 +35,7 @@ hyporheicBins = function(nbins, factor, minRT, maxRT, hyporheicExchange, porosit
 
   storage = hyporheicSize * storage_Ratios(b, binBreaks[from], binBreaks[to], minRT, maxRT)
 
-  #WHAT IS THE AVERAGE RESIDENCE TIME OF A BIN???
-  #meanFlowPathResTime = ((binBreaks[from]^(b+1) + binBreaks[to]^(b+1)) / 2)^(1/(b+1))
-  #meanBinResTime = meanFlowPathResTime - binBreaks[from]
-
-  #meanBinResTime2 = (iCDF(b, binBreaks[from], binBreaks[to]) - maxRT^(b+1)*(binBreaks[to] - binBreaks[from])) / (binBreaks[to] - binBreaks[from])
+  meanWaterAge = meanWaterAge(b, binBreaks[from], binBreaks[to], minRT)
 
   rtdStats = list(a=a, b=b)
 
@@ -47,9 +43,8 @@ hyporheicBins = function(nbins, factor, minRT, maxRT, hyporheicExchange, porosit
     from = binBreaks[from],
     to = binBreaks[to],
     storage = storage,
-#    meanFlowPathResTime = meanFlowPathResTime,
-#    meanBinResTime = meanBinResTime,
-#    meanBinResTime2 = meanBinResTime2,
+    meanWaterAge = meanWaterAge,
+    meanBinResTime = meanWaterAge - binBreaks[from],
     inFlow = inFlow,
     returnFlow = returnFlow,
     continuedFlow = continuedFlow
