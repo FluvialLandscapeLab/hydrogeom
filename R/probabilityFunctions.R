@@ -10,15 +10,17 @@ CDF = function(k, x, xmin) {
 }
 
 #definite integral of CDF, above
-iCDF = function(k, froms, tos, xmin = froms) {
-  return (1/xmin^(k+1)) * (tos^(k+2) - froms^(k+2))/(k+2)
+iCDF = function(k, xmin, xmax, CDFxmin = xmin) {
+  return((1/CDFxmin^(k+1)) * (xmax^(k+2) - xmin^(k+2))/(k+2))
+
+  #(1/(xmin^(k+1) - xmax^(k+1))) * (((tos-xmax^(k+1))^(k+2)) - ((froms - xmax^(k+1))^(k+2)))/(k+2)
 }
 
 
-storage_Ratios = function(k, froms, tos, tmin, tmax) {
+storage_Ratios = function(k, xmin, xmax, CDFmin, CDFmax) {
 
-  sratios = (iCDF(k, froms, tos) - CDF(k, tmax, tmin)*(tos - froms)) /
-            (iCDF(k, tmin, tmax) - CDF(k, tmax, tmin)*(tmax - tmin))
+  sratios = (iCDF(k, xmin, xmax, CDFmin) - CDF(k, CDFmax, CDFmin)*(xmax - xmin)) /
+            (iCDF(k, CDFmin, CDFmax) - CDF(k, CDFmax, CDFmin)*(CDFmax - CDFmin))
 
   return(sratios)
 }

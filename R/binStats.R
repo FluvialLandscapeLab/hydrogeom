@@ -12,7 +12,7 @@ hyporheicBins = function(nbins, factor, minRT, maxRT, hyporheicExchange, porosit
   }
 
   # find b associated with user-specified storage:exchange ratio
-  b = optimize(f = bError, interval = c(-2, -1))$minimum
+  b = optimize(f = bError, interval = c(-100, 100))$minimum
   a = PDF(b, 1, minRT) #when t=1, PDF simplifies to "a" if PDF = a*x^b)
 
   binBreaks = getBinBreaks(nbins, factor, maxRT - minRT) + minRT
