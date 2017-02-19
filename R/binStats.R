@@ -1,53 +1,40 @@
 hyporheicBins = function(nbins, factor, minRT, maxRT, hyporheicExchange, porosity, hyporheicSize) {
 
-  bError = function(b) {
-    #Expected ratio of storage to exchange rate
-    specifiedStorageRatio = hyporheicSize*porosity/hyporheicExchange
-    #Ratio of storage to exchange rate for a given value of b. (No need to
-    #divide by anything because we are integrating a CDF; by definition, with a
-    #CDF, the incoming flux would be 1.0)
-    integratedStorageRatio = (iCDF(b, minRT, maxRT) - CDF(b, maxRT, minRT)*(maxRT - minRT)) / (1-CDF(b, maxRT, minRT))
+  hyporheicSize = hyporheicSize*porosity
 
-    return((specifiedStorageRatio-integratedStorageRatio)^2)
+  bError = function(b) {
+    sizeEstimate = hyporheicExchange * integrate(function(x) PDF(x, b, minRT, maxRT) * (x - minRT), minRT, maxRT)$value  #storageFactor(b, minRT, maxRT, minRT, maxRT)
+    return((hyporheicSize - sizeEstimate)^2)
   }
 
   # find b associated with user-specified storage:exchange ratio
-  b = optimize(f = bError, interval = c(-100, 100))$minimum
-  a = PDF(b, 1, minRT) #when t=1, PDF simplifies to "a" if PDF = a*x^b)
+  b = optimize(f = bError, interval = c(-5, -1))$minimum
+  a = hyporheicExchange * PDFaValue(b, minRT, maxRT)
 
   binBreaks = getBinBreaks(nbins, factor, maxRT - minRT) + minRT
   from = 1:nbins
   to = from + 1
 
-  # algorithm assumes maxRT as upper limit on hyporheic exchange of interest.
-  # This means that sum amount of hyporehic exchange (proportional to
-  # CDF(maxRT)) will not be considered by this analysis.  HE* is the sum of the
-  # user specified exchange plus the exchange that will not be considered.
-  # This value is needed as a factor for values returned by CDF.
-  FlowFraction = 1 - CDF(b, maxRT, minRT)
-  HEStar = hyporheicExchange / FlowFraction
-  # Exchange past t=maxRT is not considered
-  ExchangeNotConsidered = HEStar * CDF(b, maxRT, minRT)
-
-  inFlow = HEStar * CDF(b, binBreaks[from], minRT) - ExchangeNotConsidered
-  continuedFlow = HEStar * CDF(b, binBreaks[to], minRT) - ExchangeNotConsidered
+  inFlow = hyporheicExchange * CDF(binBreaks[from], b, minRT, maxRT)
+  continuedFlow = hyporheicExchange * CDF(binBreaks[to], b, minRT, maxRT)
   returnFlow = inFlow - continuedFlow
 
-  storage = hyporheicSize * storage_Ratios(b, binBreaks[from], binBreaks[to], minRT, maxRT)
+  storage = hyporheicExchange * storageFactor(b, minRT, maxRT, binBreaks[from], binBreaks[to])
 
-  meanWaterAge = meanWaterAge(b, binBreaks[from], binBreaks[to], minRT)
+  meanBinStatList = meanBinStats(b, minRT, maxRT, binBreaks[from], binBreaks[to])
 
   rtdStats = list(a=a, b=b)
 
   results = data.frame(
     from = binBreaks[from],
     to = binBreaks[to],
+    entering = inFlow,
+    returning = returnFlow,
+    continuing = continuedFlow,
     storage = storage,
-    meanWaterAge = meanWaterAge,
-    meanBinResTime = meanWaterAge - binBreaks[from],
-    inFlow = inFlow,
-    returnFlow = returnFlow,
-    continuedFlow = continuedFlow
+    meanWaterAge = meanBinStatList$meanWaterAge,
+    meanBinResTime = meanBinStatList$meanWaterAge - binBreaks[from],
+    meanBinFlow = hyporheicExchange * meanBinStatList$meanBinFlow
   )
   attributes(results) = c(attributes(results), rtdStats)
   return(results)
