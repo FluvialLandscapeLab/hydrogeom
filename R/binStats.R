@@ -1,15 +1,18 @@
-hyporheicBins = function(nbins, factor, minRT, maxRT, hyporheicExchange, porosity, hyporheicSize) {
+hyporheicBins = function(nbins, factor, minRT, maxRT, hyporheicExchange = NULL, porosity, hyporheicSize, b = NULL) {
 
   hyporheicSize = hyporheicSize*porosity
 
-  bError = function(b) {
-    sizeEstimate = hyporheicExchange * integrate(function(x) PDF(x, b, minRT, maxRT) * (x - minRT), minRT, maxRT)$value  #storageFactor(b, minRT, maxRT, minRT, maxRT)
-    return((hyporheicSize - sizeEstimate)^2)
-  }
-
+    bError = function(b) {
+      sizeEstimate = hyporheicExchange * integrate(function(x) PDF(x, b, minRT, maxRT) * (x - minRT), minRT, maxRT)$value  #storageFactor(b, minRT, maxRT, minRT, maxRT)
+      return((hyporheicSize - sizeEstimate)^2)
+    }
   # find b associated with user-specified storage:exchange ratio
-  b = optimize(f = bError, interval = c(-5, -1))$minimum
-  a = hyporheicExchange * PDFaValue(b, minRT, maxRT)
+    if(is.null(b)) {
+      b = optimize(f = bError, interval = c(-5, -1))$minimum
+    } else {
+      hyporheicExchange = hyporheicSize / integrate(function(x) PDF(x, b, minRT, maxRT) * (x - minRT), minRT, maxRT)$value
+    }
+    a = hyporheicExchange * PDFaValue(b, minRT, maxRT)
 
   binBreaks = getBinBreaks(nbins, factor, maxRT - minRT) + minRT
   from = 1:nbins
