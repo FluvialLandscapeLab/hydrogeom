@@ -1,4 +1,4 @@
-hyporheicBins = function(nbins, factor, minRT, maxRT, hyporheicExchange = NULL, porosity, hyporheicSize, b = NULL) {
+hyporheicBins = function(nbins, factor, minRT, maxRT, porosity, hyporheicSize, hyporheicExchange = NULL, b = NULL) {
 
   hyporheicSize = hyporheicSize*porosity
 
