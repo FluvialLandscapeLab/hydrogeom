@@ -27,6 +27,10 @@ CDF = function(x, k, n, m) {
 }
 
 storageFactor = function(k, n, m, b1, b2){
+
+  #!!!!! NOTE: This is just the integral of the CDF from b1 to b2!!!!
+
+
   #integrate (x^k - m^k) * (k+1) * (x - n) / (m^(k+1) - n^(k+1) - (m - n) * m^k * (k+1)) dx from n to m for k=-1.5, n = 10, m=100
   bad = n>=m
   sF = function(x, b) PDF(x, k, n, m) * (x - b)
@@ -49,7 +53,7 @@ meanBinStats = function(k, n, m, b1, b2) {
   for (i in 1:length(b1)) {
     integratedCDF = integrate(function(x) CDF(x, k, n, m), b1[i], b2[i])$value
 #    lessArea = CDF(b2[i], k, n, m) * (b2[i]-b1[i])
-#    diffCDF = CDF(b1[i], k, n, m) - CDF(b2[i], k, n, m)
+#    diffCDF = CDF(b1[i], hyporhk, n, m) - CDF(b2[i], k, n, m)
 #    result$meanWaterAge[i] = b1[i] + (integratedCDF - lessArea) / diffCDF
     result$meanWaterAge[i] = integrate(function(x) CDF(x, k, n, m) * x, b1[i], b2[i])$value / integratedCDF
     result$meanBinFlow[i] = integratedCDF / (b2[i] - b1[i])
