@@ -1,7 +1,7 @@
 conceptPlot = function(
   bins,
   compoundBoxWidth = 0.2,
-  flowWidthFactor = 1,
+  flowPeriod = 3600,
   binGapFactor = 0.05,
   backgroundCol = "black",
   textCol = "white",
@@ -9,29 +9,34 @@ conceptPlot = function(
   yAxisMax = 0
 ){
 
+  #!!!!!! reverse the row order of the bins array !!!!!!
   bins = bins[nrow(bins):1,]
 
-
+  # set the gap height, relative to water storage.
   gapHeight = binGapFactor * sum(bins$waterStorage)
+
+  # calculate the x value (center) for the bins
   bins$rowCenter = cumsum(bins$waterStorage) - bins$waterStorage/2
   bins$rowCenter = bins$rowCenter + 0:(nrow(bins)-1) * gapHeight
+
+  # calculate the max y value (top) of each bin
   bins$rowTop = bins$rowCenter + bins$waterStorage/2
 
-
+  # set some basics for the plot space
   HZ = ggplot2::ggplot()
   HZ = HZ +
     ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank()) +
     ggplot2::theme(plot.background = ggplot2::element_rect(fill = backgroundCol, colour = backgroundCol), panel.background = ggplot2::element_blank(), axis.text = ggplot2::element_blank())
-
-
   HZ = HZ + ggplot2::coord_cartesian(xlim = c(1-compoundBoxWidth/1.9, 1+compoundBoxWidth*3/2))
   if(yAxisMax > 0) {
     HZ = HZ + ggplot2::coord_cartesian(ylim = c(0, yAxisMax))
   }
 
+  # deterning the number of bins (rows)
   nr = nrow(bins)
 
-  ##BINS
+  ##BINS -- bins are located at x = 1, using the compoundBoxWidth as a width.
+  ##Row center, calculated above, is the y-value of the middle of the bin
   HZ = HZ +
     ggplot2::geom_tile(
       data = bins,
@@ -46,15 +51,17 @@ conceptPlot = function(
       fill = rainbow(nr, end = (nr-6)/nr)
     )
 
+  # calculate flow data
   idx = 1:(nr - 1)
   nIdx = idx + 1
   flowData = data.frame(
     centers = bins$rowTop + gapHeight/2, #c((bins$rowCenter[idx]+bins$rowCenter[nIdx])/2, bins$rowCenter[nr] + (bins$waterStorage[nr]+gapHeight)/2),
     height = gapHeight, #c((bins$waterStorage[idx]+bins$waterStorage[nIdx])/2 , bins$waterStorage[nr]),
-    flow = bins$entering*flowWidthFactor,
-    upwelling = bins$returning*flowWidthFactor
+    flow = bins$entering*flowPeriod,
+    upwelling = bins$returning*flowPeriod
   )
-  flowData$returnCenter =  1 + compoundBoxWidth*1.05/2 + sum(flowData$upwelling) - cumsum((c(0 , flowData$upwelling[-nr]) + flowData$upwelling)/2)
+  flowData$returnCenter =  1 + compoundBoxWidth*0.55 + (flowData$flow[nr] - cumsum(flowData$upwelling) + flowData$upwelling/2)*compoundBoxWidth/flowData$height
+  #flowData$returnCenter =  1 + compoundBoxWidth*1.05/2 + sum(flowData$upwelling) - cumsum((c(0 , flowData$upwelling[-nr]) + flowData$upwelling)/2)
 
   ##RETURN FLOW
   HZ = HZ +
@@ -64,7 +71,7 @@ conceptPlot = function(
         x = returnCenter,
         y = centers[nr], #(bins$rowCenter + centers[nr] + height[nr]/2)/2,
         height = height[nr], #(centers[nr] - bins$rowCenter) + height[nr]/2,
-        width = upwelling
+        width = upwelling*compoundBoxWidth/height
       ),
       #color = "cyan4",
       #fill = "cyan",
@@ -80,13 +87,13 @@ conceptPlot = function(
         x = 1, #- compoundBoxWidth*1.05/2 - flow/2,
         y = centers,
         height = height,
-        width = flow
+        width = flow*compoundBoxWidth/height
       ),
-      #fill = "cyan",
-      #color = "cyan4",
+      fill = "cyan",
+      color = "cyan4"
       #size = 1
-      fill = c(rainbow(nr, end = (nr-6)/nr)[-1], "blue"),
-      color = "black"
+      #fill = c(rainbow(nr, end = (nr-6)/nr)[-1], "blue"),
+      #color = "black"
     )
 
   ## HORIZONTAL LINES
