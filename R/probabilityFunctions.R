@@ -26,17 +26,25 @@ CDF = function(x, k, n, m) {
   return(result)
 }
 
-storageFactor = function(k, n, m, b1, b2){
+storageFactor = function(k, n, m, b1, b2, numerical = F){
 
   #!!!!! NOTE: This is just the integral of the CDF from b1 to b2!!!!
+#  integratedCDFNumerator = ((b1^(k+2) - b2^k * ((b2-b1) * k * ((k+1)*(b2-b1)/2 - b1) + b1^2))/(k+2))
 
 
+  integratedCDFNumerator =  (k+1)*m^k*(b2^2-b1^2)/2 - (b2^(k+2) - b1^(k+2))/(k+2) - (b2-b1)*k*m^(k+1)
+  CDFDenom = ((m^(k+1) - n^(k+1)) - m^k * (m - n) * (k+1))
   #integrate (x^k - m^k) * (k+1) * (x - n) / (m^(k+1) - n^(k+1) - (m - n) * m^k * (k+1)) dx from n to m for k=-1.5, n = 10, m=100
   bad = n>=m
-  sF = function(x, b) PDF(x, k, n, m) * (x - b)
-  result = rep(numeric(0), length(b1))
-  for(i in 1:length(b1)) {
-    result[i] = integrate(sF, b1[i], b2[i], b = b1[i])$value + CDF(b2[i], k, n, m) * (b2[i] - b1[i])
+
+  if(numerical == T) {
+    sF = function(x, b) PDF(x, k, n, m) * (x - b)
+    result = rep(numeric(0), length(b1))
+    for(i in 1:length(b1)) {
+      result[i] = integrate(sF, b1[i], b2[i], b = b1[i])$value + CDF(b2[i], k, n, m) * (b2[i] - b1[i])
+    }
+  } else {
+    result = integratedCDFNumerator/CDFDenom
   }
 #  part1 = b1^2 * (k*m^k*(3*m-b1) + b1*(-m^k + 6*b1^k / (6+5*k+k^2)))
 #  part2 = b2 * (k*m^k * (-3*m*b2 + 2*b2^2 + 6*m*b1 - 3*b2*b1) + (b2*((6+5*k+k^2)*m^k*(2*b2-3*b1)-6*b2^k*((2+k)*b2-(3+k)*b1)))/((2+k)*(3+k)))
