@@ -1,3 +1,139 @@
+# NOTE: fun(tau, tau_0, tau_n, ...) must be a funtion that returns values of the
+# PDF.  It will be integrated numerically.
+
+# solution(tau_a, tau_b, tau_0, tau_n, ...) must be a function that returns the
+# integration of the CCDF of the PDF.
+
+# In either case, '...' are any other values that are required by fun or
+# solution (e.g., alpha for power law).  The first of these extra values can be
+# estimated if not passed to TSZStats, but storage and q are both provided.
+# Thus, in the case of fun = aPDF(tau, tau_0, tau_n, x, y, z) or solution =
+# anIntegratedCCDF(tau_a, tau_b, tau_0, tau_n, x, y, z) x can be estimated, but
+# y and z must be provided (and named, e.g. y=3, z=2, when passed to TSZStats).
+
+TSZStats = function(TSZs, tau_0, tau_n, storage = NULL, q = NULL, ..., factor = NULL, solvedCDF = powerLawCDF, solvedIntCDF = powerLawIntCDF, fun = NULL, interval = NULL) {
+  arguments = as.list(match.call())
+  arguments = sapply(arguments[2:length(arguments)], eval)
+  argumentTypes = sapply(arguments, mode)
+  invalidArguments = !(argumentTypes %in% c("numeric", "NULL"))
+  if(any(invalidArguments)) {
+    stop(
+      "All arguments passed to 'TSZStats' must be numeric, however '",
+      paste0(
+        names(arguments[invalidArguments]),
+        "' was type '",
+        sapply(argumentTypes[invalidArguments], mode),
+        collapse = "'; "),
+      "'."
+    )
+  }
+
+  if (any(sort(TSZs) != TSZs)) stop("TSZs must be sorted ascending.")
+
+  if(sum(is.null(storage), is.null(q)) == 2) stop("At least one of the parameters 'storage' or 'q' must be specified")
+
+  # getStorage = function(...) {
+  #   storageIntegration = customIntCDF(tau_0, tau_n, tau_0, tau_n, ..., solution = solvedIntCDF, fun = fun)
+  #   if(storageIntegration$message != "OK") {
+  #     stop("Numerical integration error.  Message was '", storageIntegration$message, "'")
+  #   }
+  #   return(storageIntegration)
+  # }
+
+  if(is.null(storage)) {
+    storage = q * customIntCDF(tau_0, tau_n, tau_0, tau_n, ..., solution = solvedIntCDF, fun = fun)$value
+  } else if(is.null(q)) {
+    q = storage/customIntCDF(tau_0, tau_n, tau_0, tau_n, ..., solution = solvedIntCDF, fun = fun)$value
+  } else {
+    # try to use optimize() to estimate a value from the integration function
+    bError = function(x, ...) {
+#      storageIntegration = getStorage(x, ...)
+#      return((storage - storageIntegration$value*q)^2)
+      return((storage - q * customIntCDF(tau_0, tau_n, tau_0, tau_n, x, ..., solution = solvedIntCDF, fun = fun)$value)^2)
+    }
+    value = optimize(f = bError, interval = interval)$minimum
+  }
+
+  if(!is.null(factor)) {
+    if(factor >= 1) {
+      TSZs = getBinBreaks(TSZs, factor, tau_n - tau_0) + tau_0
+    } else if(factor == 0) {
+      TSZs = getEvenAreaBinBreaks(TSZs, tau_0, tau_n, ..., solution = solvedIntCDF, fun = fun)
+    } else {
+      stop("Value for 'factor' must be 1.0 or greater.")
+    }
+  } else {
+    if(length(TSZs) < 2) stop("The 'TSZs' vector must include the minimum and maximum residence times of interest, plus any residence times of intervening TSZ boundaries. Use a numeric vector of length > 1.")
+  }
+
+  TSZs = data.frame(from = TSZs[1:(length(TSZs)-1)], to = TSZs[2:length(TSZs)])
+
+  flowList =
+    lapply(
+      TSZs,
+      sapply,
+      function(f) {
+        flow = customCDF(tau = f, tau_0 = tau_0, tau_n = tau_n, ..., solution = solvedCDF, fun = fun)
+        if(flow$message != "OK") stop("Integration error in calculating CDF. Message: ", flow$message)
+        return(q * flow$value)
+      }
+    )
+
+  TSZs$entering = flowList$from
+  TSZs$returning = flowList$from - flowList$to
+  TSZs$continuing = flowList$to
+
+  TSZs$waterStorage =
+    mapply(
+      function(ta, tb, ...) {
+        storage = customIntCDF(tau_a = ta, tau_b = tb, ...)
+        if(storage$message != "OK") stop("Error integrating CDF. Message:", storage$message)
+        return(q * storage$value)
+      },
+      ta = TSZs$from,
+      tb = TSZs$to,
+      MoreArgs =
+        list(
+          tau_0 = tau_0,
+          tau_n = tau_n,
+          ...,
+          solution = solvedIntCDF,
+          fun = fun
+        )
+    )
+
+  return(TSZs)
+}
+
+
+getEvenAreaBinBreaks = function(nBins, tau_0, tau_n, ..., solution = powerLawIntCDF, fun = NULL) {
+
+  storageIntegration = customIntCDF(tau_0, tau_n, tau_0, tau_n, ..., solution = solution, fun = fun)
+  if(storageIntegration$message != "OK") {
+    stop("Numerical integration error.  Message was '", storageIntegration$message, "'")
+  }
+  target = storageIntegration$value/nBins
+  binError = function(x, ...) {
+    storageIntegration = customIntCDF(tau_0, x, tau_0, tau_n, ..., solution = solution, fun = fun)
+    if(storageIntegration$message != "OK") {
+      stop("Numerical integration error.  Message was '", storageIntegration$message, "'")
+    }
+    return((target * i - storageIntegration$value)^2)
+  }
+  TSZs = numeric(0)
+  for (i in 1:(nBins-1)) {
+    optimal = optimize(binError, ..., lower = tau_0, upper = tau_n)
+    TSZs[i] = optimal$minimum
+  }
+  return(c(tau_0, TSZs, tau_n))
+}
+
+
+
+
+
+
+
 hyporheicBins = function(nbins, factor, minRT, maxRT, porosity, hyporheicSize, hyporheicExchange = NULL, b = NULL) {
 
   hyporheicSize = hyporheicSize*porosity
@@ -45,6 +181,7 @@ hyporheicBins = function(nbins, factor, minRT, maxRT, porosity, hyporheicSize, h
 
 
 }
+
 getBinBreaks = function(nbins, factor, maxRT) {
   # Divides a range into bins, where the cumulative bin size doubles with the addition of each bin
   # Returns a vector of bin breakpoints, including the range values as the first and last
@@ -75,6 +212,7 @@ getBinBreaks = function(nbins, factor, maxRT) {
   binBreaks = c(0, sapply(1:nbins, function(x) sum(binSizes[1:x])))+range[1]
   return(binBreaks)
 }
+
 
 meanRTError = function(meanRT, b, startRT, endRT, maxRT, integrateQ, infiniteAquifer = T) {
   if(infiniteAquifer) {
