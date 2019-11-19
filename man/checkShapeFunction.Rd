@@ -67,4 +67,3 @@ checkShapeFunction("powerLaw", 60, 3600, alpha = 1.5, integrationArgs = list(sub
 # increase subdivisions somewhat and integration succeeds.
 checkShapeFunction("powerLaw", 60, 3600, alpha = 1.5, integrationArgs = list(subdivisions = 10))
 }
-

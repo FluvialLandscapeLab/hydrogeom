@@ -17,7 +17,7 @@
 #'
 #' The exchange of water among and size of multiple transient storage zones
 #' within the hyporehic zone are calculated according to the method describe in
-#' Poole et al. (In press).  Calculations are made either by utilizing solutions
+#' Poole et al. (In prep).  Calculations are made either by utilizing solutions
 #' to various integrations of a shape function (e.g., \code{\link{powerLawPDF}}
 #' and associated fuctions) or via numerical integration of a shape fuction
 #' (e.g., \code{\link{powerLaw}}).
@@ -49,12 +49,13 @@
 #'   hyporheic zone.
 #' @param tau_n The largest residence time to be considered part of the
 #'   hyporehic zone.
-#' @param storage Amount of water stored in the hyporheic zone.
+#' @param storage Amount of water stored in the hyporheic zone.  Units can be
+#'   length, area, or volume, but must be consistent across parameters.
 #' @param q Gross hyporheic exchange per time unit.  Exchange can be unit can be
-#'   distance, area, or volume per unit time, but must be the same as used units
+#'   length, area, or volume per unit time, but must be the same as used units
 #'   used to describe storage.  Time unit must be the same as units used to
 #'   describe tau_0 and tau_n.
-#' @param .... Additional arguments required by shape function (e.g.,
+#' @param ... Additional arguments required by shape function (e.g.,
 #'   \code{alpha} for \code{\link{powerLaw}}).  Must be named.  First of these
 #'   values can be passed as NULL and will be estimated if both \code{storage}
 #'   and \code{q} are provided.  See details.
@@ -81,12 +82,29 @@
 #'   parameters is seldom required.  These parameters are useful only if and
 #'   unexpected error message is returned by the \code{\link{integrate}}
 #'   function.
+#' @param forceNumeric When set to TRUE, uses numeric integration even when
+#'   solution in available.
+#' @param optimizeInterval A vector of two numerical values passed to the
+#'   \code{\link{optimize}} function describing the range of plausible values
+#'   for a NULL parameter included in '...'. See description of '...' above.
+#' @param optimizeTol Another value passed to \code{\link{optimize}} when a NULL
+#'   parameter is included in '...'.  Default value is usually sufficient.  See
+#'   documentation for \code{\link{optimize}}
+#' @param nbins See "TSZs" parameter.
+#' @param minRT,maxRT See "tau_0" and "tau_n" paramters.
+#' @param porosity Porosity of the alluvial aquifer.
+#' @param hyporheicSize See "storage" paramter.
+#' @param hyporheicExchange See "q" parameter.
+#' @param b Exponent for the power law RTD (passed as a negative value)
+#' @param integrateArgs Values passed through to the \code{\link{integrate}}
+#'   function.
 #' @return A TSZ object, which is a data.frame with attributes that record the
-#'   arguments (\code{TSZs, tau_0, tau_n, storage, q, factor, and forceNumeric},
-#'   along with any shape specific parameters (e.g., \code{alpha} for
-#'   \code{\link{powerLaw}})) used to calculate the values in the data.frame.
-#'   Attributes also include the descrepancy between the request and calculated
-#'   q and storage. Descrepancy values should be
+#'   arguments (\code{TSZs}, \code{tau_0}, \code{tau_n}, \code{storage},
+#'   \code{q}, \code{factor}, and \code{forceNumeric}, along with any shape
+#'   specific parameters (e.g., \code{alpha} for \code{\link{powerLaw}})) used
+#'   to calculate the values in the data.frame. Attributes also include the
+#'   descrepancy between the request and calculated q and storage. Descrepancy
+#'   values should be
 #'
 #' @export
 TSZStats = function(TSZs, tau_0, tau_n, storage = NULL, q = NULL, ...,
@@ -143,7 +161,7 @@ TSZStats = function(TSZs, tau_0, tau_n, storage = NULL, q = NULL, ...,
     # either q or storage is NULL..
 
     # calculate TSZ breaks
-    if(!is.null(factor)) {
+    if(!is.null(factor) & length(TSZs) == 1) {
       if(factor >= 1) {
         TSZs = getBinBreaks(TSZs, factor, tau_n - tau_0) + tau_0
       } else if(factor == 0) {
@@ -249,7 +267,8 @@ getBinBreaks = function(nbins, factor, maxRT) {
   return(binBreaks)
 }
 
-#' @export
+# Consider exporting this fuction to allow manual estimation of unknown function value...
+# #' @export
 estimateFunctionValue <- function(tau_0, tau_n, storage = NULL, q = NULL, ..., shape = "powerLaw", MoreArgs = list(), integrateArgs1 = list(), integrateArgs2 = list(), forceNumeric = F, optimizeInterval = c(1,2), optimizeTol = .Machine$double.eps^0.25) {
   if(any(!(sapply(list(tau_0, tau_n, storage, q, optimizeTol, optimizeInterval), mode) %in% c("numeric", "NULL")))) stop("The parameters tau_0, tau_n, storage, q, optimizeTol, optimizeInterval must be numeric or NULL")
   if(any(sapply(list(tau_0, tau_n, storage, q, optimizeTol), length) > 1)) stop("The parameters tau_0, tau_n, storage, and q should be either NULL or vectors of length = 1")

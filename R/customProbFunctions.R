@@ -76,7 +76,7 @@ exponent = function(tau, tau_n, sigma) {
 #' integration of tau*PDF or tau*CCDF.
 #'
 #' The function \code{numericalSolution} uses numerical integration of basic
-#' shape function (e.g., \code{\link{powerLaw}, \link{exponent}}) to return
+#' shape function (e.g., \code{\link{powerLaw}}, \code{\link{exponent}}) to return
 #' values of the probability density function (PDF) of the shape function,
 #' complementary cumulative distribution funtion (CCDF) of the shape function,
 #' finite integrals of the PDF or CCDF, or finite integrals of \code{tau*PDF} or
@@ -85,24 +85,24 @@ exponent = function(tau, tau_n, sigma) {
 #'
 #' The function \code{fullSolution} looks for a function with a name specified
 #' by the concatination of \code{shape} and \code{suffix} and checks to be sure
-#' any such function has the signature \code{function(tau, tau_0, tau_n, ...)}
-#' if suffix is "PDF" or "CCDF", or \code{function(tau_a, tau_b, tau_0, tau_n,
-#' ...} for other values of suffix.  Solutions for the "powerLaw" and "exponent"
+#' any such function has the signature \code{function(tau,} \code{tau_0,} \code{tau_n, ...)}
+#' if suffix is "PDF" or "CCDF", or \code{function(tau_a,} \code{tau_b,} \code{tau_0,} \code{tau_n,}
+#' \code{...)} for other values of suffix.  Solutions for the "powerLaw" and "exponent"
 #' shapes are provided as part of this package as follows:  PDF (e.g.
-#' \code{\link{powerLawPDF}, \link{exponentPDF}}), CCDF (e.g.
-#' \code{\link{powerLawCCDF}, \link{exponentCCDF}}), integral of the PFD (e.g.
-#' \code{\link{powerLawIntPDF}, \link{exponentIntPDF}}), integral of the CCDF
-#' (e.g. \code{\link{powerLawIntCCDF}, \link{exponentIntCCDF}}), integral of
-#' tau*PDF (e.g. \code{\link{powerLawIntTau.PDF}, \link{exponentIntTau.PDF}}) or
-#' integral of tau*CCDF (e.g. \code{\link{powerLawInt.TauCCDF},
-#' \link{exponentIntTau.CCDF}}).  These solution functions can also be called
+#' \code{\link{powerLawPDF}}, \code{\link{exponentPDF}}), CCDF (e.g.
+#' \code{\link{powerLawCCDF}}, \code{\link{exponentCCDF}}), integral of the PFD (e.g.
+#' \code{\link{powerLawIntPDF}}, \code{\link{exponentIntPDF}}), integral of the CCDF
+#' (e.g. \code{\link{powerLawIntCCDF}}, \code{\link{exponentIntCCDF}}), integral of
+#' tau*PDF (e.g. \code{\link{powerLawIntTau.PDF}}, \code{\link{exponentIntTau.PDF}}) or
+#' integral of tau*CCDF (e.g. \code{\link{powerLawIntTau.CCDF}},
+#' \code{\link{exponentIntTau.CCDF}}).  These solution functions can also be called
 #' directly, but \code{fullSolution} is provided as a convenience wrapper that
 #' calls the functions using the convention \code{shape} and \code{suffix}.
 #'
 #' The user can provide custom shape functions or solutions for other shapes,
 #' however the names of the custom solution functions must follow the convention
 #' of concatinating the shape name with the suffix as the name of the solution
-#' function (e.g., the solution function for the integral of tua*PDF of a shape
+#' function (e.g., the solution function for the integral of tau*PDF of a shape
 #' called "foo" must be \code{fooIntTau.PDF}).  For more information, see the
 #' documentation of \code{\link{powerLaw}} and \code{\link{powerLawPDF}}
 #'

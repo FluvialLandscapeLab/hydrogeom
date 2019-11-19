@@ -5,10 +5,10 @@
 \alias{hyporheicBins}
 \title{Generate transient storage statistics}
 \usage{
-TSZStats(TSZs, tau_0, tau_n, storage = NULL, q = NULL, ..., factor = NULL,
-  shape = "powerLaw", MoreArgs = list(), integrateArgs1 = list(),
-  integrateArgs2 = list(), forceNumeric = F, optimizeInterval = NULL,
-  optimizeTol = .Machine$double.eps^0.25)
+TSZStats(TSZs, tau_0, tau_n, storage = NULL, q = NULL, ...,
+  factor = NULL, shape = "powerLaw", MoreArgs = list(),
+  integrateArgs1 = list(), integrateArgs2 = list(), forceNumeric = F,
+  optimizeInterval = NULL, optimizeTol = .Machine$double.eps^0.25)
 
 hyporheicBins(nbins, factor, minRT, maxRT, porosity, hyporheicSize,
   hyporheicExchange = NULL, b = NULL, integrateArgs = list())
@@ -24,12 +24,18 @@ hyporheic zone.}
 \item{tau_n}{The largest residence time to be considered part of the
 hyporehic zone.}
 
-\item{storage}{Amount of water stored in the hyporheic zone.}
+\item{storage}{Amount of water stored in the hyporheic zone.  Units can be
+length, area, or volume, but must be consistent across parameters.}
 
 \item{q}{Gross hyporheic exchange per time unit.  Exchange can be unit can be
-distance, area, or volume per unit time, but must be the same as used units
+length, area, or volume per unit time, but must be the same as used units
 used to describe storage.  Time unit must be the same as units used to
 describe tau_0 and tau_n.}
+
+\item{...}{Additional arguments required by shape function (e.g.,
+\code{alpha} for \code{\link{powerLaw}}).  Must be named.  First of these
+values can be passed as NULL and will be estimated if both \code{storage}
+and \code{q} are provided.  See details.}
 
 \item{factor}{Controls the distribution of residence time for transient
 storage zones when \code{TSZs} is set equal to the number of transient
@@ -58,23 +64,45 @@ parameters is seldom required.  These parameters are useful only if and
 unexpected error message is returned by the \code{\link{integrate}}
 function.}
 
-\item{....}{Additional arguments required by shape function (e.g.,
-\code{alpha} for \code{\link{powerLaw}}).  Must be named.  First of these
-values can be passed as NULL and will be estimated if both \code{storage}
-and \code{q} are provided.  See details.}
+\item{forceNumeric}{When set to TRUE, uses numeric integration even when
+solution in available.}
+
+\item{optimizeInterval}{A vector of two numerical values passed to the
+\code{\link{optimize}} function describing the range of plausible values
+for a NULL parameter included in '...'. See description of '...' above.}
+
+\item{optimizeTol}{Another value passed to \code{\link{optimize}} when a NULL
+parameter is included in '...'.  Default value is usually sufficient.  See
+documentation for \code{\link{optimize}}}
+
+\item{nbins}{See "TSZs" parameter.}
+
+\item{minRT, maxRT}{See "tau_0" and "tau_n" paramters.}
+
+\item{porosity}{Porosity of the alluvial aquifer.}
+
+\item{hyporheicSize}{See "storage" paramter.}
+
+\item{hyporheicExchange}{See "q" parameter.}
+
+\item{b}{Exponent for the power law RTD (passed as a negative value)}
+
+\item{integrateArgs}{Values passed through to the \code{\link{integrate}}
+function.}
 }
 \value{
 A TSZ object, which is a data.frame with attributes that record the
-  arguments (\code{TSZs, tau_0, tau_n, storage, q, factor, and forceNumeric},
-  along with any shape specific parameters (e.g., \code{alpha} for
-  \code{\link{powerLaw}})) used to calculate the values in the data.frame.
-  Attributes also include the descrepancy between the request and calculated
-  q and storage. Descrepancy values should be
+  arguments (\code{TSZs}, \code{tau_0}, \code{tau_n}, \code{storage},
+  \code{q}, \code{factor}, and \code{forceNumeric}, along with any shape
+  specific parameters (e.g., \code{alpha} for \code{\link{powerLaw}})) used
+  to calculate the values in the data.frame. Attributes also include the
+  descrepancy between the request and calculated q and storage. Descrepancy
+  values should be
 }
 \description{
 The exchange of water among and size of multiple transient storage zones
 within the hyporehic zone are calculated according to the method describe in
-Poole et al. (In press).  Calculations are made either by utilizing solutions
+Poole et al. (In prep).  Calculations are made either by utilizing solutions
 to various integrations of a shape function (e.g., \code{\link{powerLawPDF}}
 and associated fuctions) or via numerical integration of a shape fuction
 (e.g., \code{\link{powerLaw}}).
@@ -100,4 +128,3 @@ along with non-NULL values for \code{storege} and \code{q}.
 \code{HyporheicBins} has been depricated and is now a wrapper for
 \code{TSZStats}.  Use \code{TSZStats} instead.
 }
-

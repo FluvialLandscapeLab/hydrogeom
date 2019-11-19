@@ -1,10 +1,10 @@
 Package: hydrogeom
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Calculate Hydrologic Geometry of Expansive Hyporheic Zones
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: Geoffrey Poole
+Maintainer: Geoffrey Poole <gpoole@montana.edu>
+Description: Uses standard or user-defined probablity density function to calculate rates of hyporheic exchange and hyporehic water storage in expansive coarse-grained alluvial aquifers for multiple transient storage zone defined by residence time.
+License: MIT + file LICENSE
 LazyData: TRUE
-RoxygenNote: 5.0.1
+RoxygenNote: 6.1.1
