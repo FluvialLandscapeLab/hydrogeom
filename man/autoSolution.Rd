@@ -6,16 +6,44 @@
 \alias{numericalSolution}
 \title{Calculate and itegrate probability functions for shape functions}
 \usage{
-autoSolution(suffix, shape, tau_0, tau_n, tau, tau_b = NULL, ...,
-  MoreArgs = list(), integrateArgs1 = list(),
-  integrateArgs2 = list(), forceNumeric = F)
+autoSolution(
+  suffix,
+  shape,
+  tau_0,
+  tau_n,
+  tau,
+  tau_b = NULL,
+  ...,
+  MoreArgs = list(),
+  integrateArgs1 = list(),
+  integrateArgs2 = list(),
+  forceNumeric = F
+)
 
-fullSolution(suffix, shape, tau_0, tau_n, tau, tau_b = NULL, ...,
-  MoreArgs = list())
+fullSolution(
+  suffix,
+  shape,
+  tau_0,
+  tau_n,
+  tau,
+  tau_b = NULL,
+  ...,
+  MoreArgs = list()
+)
 
-numericalSolution(suffix, shape, tau_0, tau_n, tau, tau_b = NULL, ...,
-  MoreArgs = list(), integrateArgs1 = list(),
-  integrateArgs2 = list(), forceNumeric = T)
+numericalSolution(
+  suffix,
+  shape,
+  tau_0,
+  tau_n,
+  tau,
+  tau_b = NULL,
+  ...,
+  MoreArgs = list(),
+  integrateArgs1 = list(),
+  integrateArgs2 = list(),
+  forceNumeric = T
+)
 }
 \arguments{
 \item{suffix}{A character vector indicating the value to be returned; either

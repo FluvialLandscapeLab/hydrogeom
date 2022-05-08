@@ -6,5 +6,6 @@ Author: Geoffrey Poole
 Maintainer: Geoffrey Poole <gpoole@montana.edu>
 Description: Uses standard or user-defined probablity density function to calculate rates of hyporheic exchange and hyporehic water storage in expansive coarse-grained alluvial aquifers for multiple transient storage zone defined by residence time.
 License: MIT + file LICENSE
+Encoding: UTF-8
 LazyData: TRUE
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.2

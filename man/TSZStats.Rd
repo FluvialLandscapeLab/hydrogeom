@@ -5,13 +5,35 @@
 \alias{hyporheicBins}
 \title{Generate transient storage statistics}
 \usage{
-TSZStats(TSZs, tau_0, tau_n, storage = NULL, q = NULL, ...,
-  factor = NULL, shape = "powerLaw", MoreArgs = list(),
-  integrateArgs1 = list(), integrateArgs2 = list(), forceNumeric = F,
-  optimizeInterval = NULL, optimizeTol = .Machine$double.eps^0.25)
+TSZStats(
+  TSZs,
+  tau_0,
+  tau_n,
+  storage = NULL,
+  q = NULL,
+  ...,
+  factor = NULL,
+  shape = "powerLaw",
+  MoreArgs = list(),
+  metric = c("s", "q"),
+  integrateArgs1 = list(),
+  integrateArgs2 = list(),
+  forceNumeric = F,
+  optimizeInterval = NULL,
+  optimizeTol = .Machine$double.eps^0.25
+)
 
-hyporheicBins(nbins, factor, minRT, maxRT, porosity, hyporheicSize,
-  hyporheicExchange = NULL, b = NULL, integrateArgs = list())
+hyporheicBins(
+  nbins,
+  factor,
+  minRT,
+  maxRT,
+  porosity,
+  hyporheicSize,
+  hyporheicExchange = NULL,
+  b = NULL,
+  integrateArgs = list()
+)
 }
 \arguments{
 \item{TSZs}{Either the number of transient storage zones requested, or a
@@ -39,8 +61,8 @@ and \code{q} are provided.  See details.}
 
 \item{factor}{Controls the distribution of residence time for transient
 storage zones when \code{TSZs} is set equal to the number of transient
-storage zones. Value must be either 0 or >1. See details.  \code{factor} is
-ignored when TSZs is a vector of the residence time breakpoints between
+storage zones. Value must be either 0 or >=1. See details.  \code{factor}
+is ignored when TSZs is a vector of the residence time breakpoints between
 transient storage zones.}
 
 \item{shape}{A character string naming the shape file (e.g.,
@@ -52,6 +74,11 @@ the shape function -- only valid when numerical integration is used;
 ignored when solutions to the shape function are used.  When passed this
 way, the values will not be vectorized with tau, tau_0, tau_n, tau_b, or
 arguments in '...'.}
+
+\item{metric}{A character vector where the first value is either 's' or 'q'.
+This parameter is considered only when factor parameter is 0 (even bins are
+requested).  If the 's' or unspecified, TSZs with even storage are
+returned.  If 'q', TSZs with even discharge are returned.}
 
 \item{integrateArgs1, integrateArgs2}{When numerical integration is used,
 these parameters are a named list of optional values for the

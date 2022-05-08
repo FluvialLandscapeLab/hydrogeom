@@ -61,8 +61,8 @@
 #'   and \code{q} are provided.  See details.
 #' @param factor Controls the distribution of residence time for transient
 #'   storage zones when \code{TSZs} is set equal to the number of transient
-#'   storage zones. Value must be either 0 or >1. See details.  \code{factor} is
-#'   ignored when TSZs is a vector of the residence time breakpoints between
+#'   storage zones. Value must be either 0 or >=1. See details.  \code{factor}
+#'   is ignored when TSZs is a vector of the residence time breakpoints between
 #'   transient storage zones.
 #' @param shape A character string naming the shape file (e.g.,
 #'   \code{\link{powerLaw}}) to be used in the calculation of transient storage
@@ -72,6 +72,10 @@
 #'   ignored when solutions to the shape function are used.  When passed this
 #'   way, the values will not be vectorized with tau, tau_0, tau_n, tau_b, or
 #'   arguments in '...'.
+#' @param metric A character vector where the first value is either 's' or 'q'.
+#'   This parameter is considered only when factor parameter is 0 (even bins are
+#'   requested).  If the 's' or unspecified, TSZs with even storage are
+#'   returned.  If 'q', TSZs with even discharge are returned.
 #' @param integrateArgs1,integrateArgs2 When numerical integration is used,
 #'   these parameters are a named list of optional values for the
 #'   \code{\link[stats]{integrate}} function.  For PDF and CCDF calculations,
@@ -108,7 +112,7 @@
 #'
 #' @export
 TSZStats = function(TSZs, tau_0, tau_n, storage = NULL, q = NULL, ...,
-                    factor = NULL, shape = "powerLaw", MoreArgs = list(),
+                    factor = NULL, shape = "powerLaw", MoreArgs = list(), metric = c("s", "q"),
                     integrateArgs1 = list(), integrateArgs2 = list(), forceNumeric = F,
                     optimizeInterval = NULL, optimizeTol = .Machine$double.eps^0.25)
   {
@@ -158,16 +162,16 @@ TSZStats = function(TSZs, tau_0, tau_n, storage = NULL, q = NULL, ...,
     attr(TSZs, "q discrepancy") = sum(TSZs$returning) - q
     attr(TSZs, "storage discrepancy") = sum(TSZs$waterStorage) - storage
   } else {
-    # either q or storage is NULL..
+    # either q or storage is NULL.
 
     # calculate TSZ breaks
     if(!is.null(factor) & length(TSZs) == 1) {
       if(factor >= 1) {
         TSZs = getBinBreaks(TSZs, factor, tau_n - tau_0) + tau_0
       } else if(factor == 0) {
-        TSZs = getEvenBinBreaks(TSZs, tau_0, tau_n, ..., shape = shape, MoreArgs = MoreArgs, integrateArgs1 = integrateArgs1, integrateArgs2 = integrateArgs2, forceNumeric = forceNumeric)
+        TSZs = getEvenBinBreaks(TSZs, tau_0, tau_n, ..., shape = shape, MoreArgs = MoreArgs, integrateArgs1 = integrateArgs1, integrateArgs2 = integrateArgs2, forceNumeric = forceNumeric, metric = metric)
       } else {
-        stop("Value for 'factor' must be 1.0 or greater.")
+        stop("Value for 'factor' must be 0 or >=1.0.")
       }
     } else {
       if(length(TSZs) < 2) stop("If 'factor' is specified as NULL, 'TSZs' must be a vector that includes the minimum and maximum residence times of interest, plus any residence times of intervening TSZ boundaries. Use a numeric vector of length > 1.")
@@ -218,20 +222,31 @@ TSZStats = function(TSZs, tau_0, tau_n, storage = NULL, q = NULL, ...,
   return(TSZs)
 }
 
-getEvenBinBreaks = function(nBins, tau_0, tau_n, ..., shape, MoreArgs, integrateArgs1, integrateArgs2, forceNumeric) {
 
-  storageIntegration = autoSolution(suffix = "IntCCDF", shape = shape, tau_0 = tau_0, tau_n = tau_n, tau = tau_0, tau_b = tau_n, ...,
+getEvenBinBreaks = function(nBins, tau_0, tau_n, ..., shape = "powerLaw", MoreArgs = list(), integrateArgs1 = list(), integrateArgs2 = list(), forceNumeric = F, metric = c("s", "q")) {
+
+  if(metric[1] == "s") {
+    suffix = "IntCCDF"
+  } else if (metric[1] == "q") {
+    suffix = "IntPDF"
+  } else {
+    stop("Paramter 'metric' must be either 's' (to return equal storage bins) or 'q' (to return equal flow bins).")
+  }
+
+  storageIntegration = autoSolution(suffix = suffix, shape = shape, tau_0 = tau_0, tau_n = tau_n, tau = tau_0, tau_b = tau_n, ...,
                                     MoreArgs = MoreArgs, integrateArgs1 = integrateArgs1, integrateArgs2 = integrateArgs2, forceNumeric = forceNumeric)
   target = storageIntegration/nBins
   binError = function(x, ...) {
-    storageIntegration = autoSolution(suffix = "IntCCDF", shape = shape, tau_0 = tau_0, tau_n = tau_n, tau = tau_0, tau_b = x, ...,
+    storageIntegration = autoSolution(suffix = suffix, shape = shape, tau_0 = tau_0, tau_n = tau_n, tau = tau_0, tau_b = x, ...,
                                       MoreArgs = MoreArgs, integrateArgs1 = integrateArgs1, integrateArgs2 = integrateArgs2, forceNumeric = forceNumeric)
     return((target * i - storageIntegration)^2)
   }
   TSZs = numeric(0)
-  for (i in 1:(nBins-1)) {
-    optimal = optimize(binError, ..., lower = tau_0, upper = tau_n)
-    TSZs[i] = optimal$minimum
+  if(nBins > 1) {
+    for (i in 1:(nBins-1)) {
+      optimal = optimize(binError, ..., lower = tau_0, upper = tau_n)
+      TSZs[i] = optimal$minimum
+    }
   }
   return(c(tau_0, TSZs, tau_n))
 }
@@ -326,3 +341,5 @@ hyporheicBins = function(nbins, factor, minRT, maxRT, porosity, hyporheicSize, h
   attr(TSZs, "b") = b
   return(TSZs)
 }
+
+

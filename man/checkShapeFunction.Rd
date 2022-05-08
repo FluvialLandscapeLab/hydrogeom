@@ -4,8 +4,15 @@
 \alias{checkShapeFunction}
 \title{Test a custom shape function}
 \usage{
-checkShapeFunction(shape, tau, tau_n, ..., MoreArgs = NULL,
-  integrateArgs = list(), valuesOnly = F)
+checkShapeFunction(
+  shape,
+  tau,
+  tau_n,
+  ...,
+  MoreArgs = NULL,
+  integrateArgs = list(),
+  valuesOnly = F
+)
 }
 \arguments{
 \item{shape}{A shape function or character string containing the name of the
