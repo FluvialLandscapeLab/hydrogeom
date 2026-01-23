@@ -19,23 +19,23 @@ powerLawPDF(tau, tau_0, tau_n, alpha)
 
 powerLawCCDF(tau, tau_0, tau_n, alpha)
 
-powerLawIntPDF(tau_a, tau_b, tau_0, tau_n, alpha)
+powerLawIntPDF(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha)
 
-powerLawIntCCDF(tau_a, tau_b, tau_0, tau_n, alpha)
+powerLawIntCCDF(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha)
 
-powerLawIntTau.CCDF(tau_a, tau_b, tau_0, tau_n, alpha)
+powerLawIntTau.CCDF(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha)
 
-powerLawIntTau.PDF(tau_a, tau_b, tau_0, tau_n, alpha)
+powerLawIntTau.PDF(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha)
 
 exponentPDF(tau, tau_0, tau_n, sigma)
 
 exponentCCDF(tau, tau_0, tau_n, sigma)
 
-exponentIntPDF(tau_a, tau_b, tau_0, tau_n, sigma)
+exponentIntPDF(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma)
 
 exponentIntCCDF(tau_a, tau_b, tau_0, tau_n, sigma)
 
-exponentIntTau.PDF(tau_a, tau_b, tau_0, tau_n, sigma)
+exponentIntTau.PDF(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma)
 
 exponentIntTau.CCDF(tau_a, tau_b, tau_0, tau_n, sigma)
 }
@@ -47,7 +47,8 @@ exponentIntTau.CCDF(tau_a, tau_b, tau_0, tau_n, sigma)
 \item{alpha}{The exponent of the power law (this value is negated within the
 functions; entering 1.5 yields a power law with an exponent of -1.5).}
 
-\item{tau_a, tau_b}{The lower and upper range for the definite integral of the PDF or CCDF.}
+\item{tau_a, tau_b}{The lower and upper range for the definite integral of the
+PDF or CCDF.}
 
 \item{sigma}{The exchange rate of groundwater with an exponential
 distribution.  (This value is negated in the calculations to simulate the
@@ -62,21 +63,21 @@ Returns a vector of numeric values.
   \code{tau}.
 
   PowerLawCCDF and exponentCCDF return the CCDF value for \code{tau}.  This
-  provides the probablity that a water molecule entering the hyporehic zone
+  provides the probability that a water molecule entering the hyporheic zone
   at time == \code{tau_0} will still be in the hyporheic zone at time
   \code{tau} (e.g., will upwell after time == \code{tau})
 
-  PowerLawIntPDF and exponentIntPDF return the definite integral from \code{tau_a} to
-  \code{tau_b} of the PDF.
+  PowerLawIntPDF and exponentIntPDF return the definite integral from
+  \code{tau_a} to \code{tau_b} of the PDF.
 
-  PowerLawIntCCDF and exponentIntCCDF return the difinite integral from \code{tau_a} to
-  \code{tau_b} of the CCDF.
+  PowerLawIntCCDF and exponentIntCCDF return the definite integral from
+  \code{tau_a} to \code{tau_b} of the CCDF.
 
-  PowerLawIntTau.PDF and exponentIntTau.PDF returns the definite integral from \code{tau_a} to
-  \code{tau_b} of \code{tau}*PDF.
+  PowerLawIntTau.PDF and exponentIntTau.PDF returns the definite integral
+  from \code{tau_a} to \code{tau_b} of \code{tau}*PDF.
 
-  PowerLawIntTau.CCDF and exponentIntTau.CCDF return the difinite integral from \code{tau_a} to
-  \code{tau_b} of \code{tau}*CCDF.
+  PowerLawIntTau.CCDF and exponentIntTau.CCDF return the definite integral
+  from \code{tau_a} to \code{tau_b} of \code{tau}*CCDF.
 }
 \description{
 \code{hydrogeom} can provide transient storage zone statistics based on
@@ -93,7 +94,7 @@ probability that a water molecule will exit the hyporheic zone with a
 residence time of \code{tau})
 
 2) the complementary cumulative distribution function (CCDF) (i.e., the
-probablity that a water molecule will still be in the hyporheic zone at
+probability that a water molecule will still be in the hyporheic zone at
 residence time \code{tau})
 
 3) the definite integral of the PDF.
@@ -105,7 +106,7 @@ residence time \code{tau})
 6) the definite integral of \code{tau}*CCDF.
 
 These values can be derived with numeric integration of a shape function
-(e.g., see \code{\link{powerLaw}}), but numerical stablity can be an issue
+(e.g., see \code{\link{powerLaw}}), but numerical stability can be an issue
 (e.g., see \code{\link{checkShapeFunction}}).  Providing solutions for the
 six integrations, above, may yield more reliable stability in the
 calculations.
@@ -115,11 +116,32 @@ implementation in this package can be viewed by printing the source code for
 each of the following functions (e.g., type print(<functionName>) in the R
 console).
 
-Solution functions for other shapes can be provided by the user.  However, they must
-follow the naming conventions of the concatination of the shape name and
-the specific suffixes: "PDF", "CCDF", "IntPDF", "IntCCDF", "IntTau.PDF", and "IntTau.CCDF".
-For instance, for a shape called "foo", the function names would be "fooPDF", "fooCCDF", "fooIntPDF", etc.
-Also, the PDF and CDF solutions must have the signature \code{function(tau, tau_0, tau_n, ...)} while the
-remaining solutions must have the signature \code{function(tau, tau_0, tau_n, ...)} where "..." are
-additional parameters required by the shape function.
+Solution functions for other shapes can be provided by the user.  However,
+they must follow the naming conventions of the concatination of the shape
+name and the specific suffixes: "PDF", "CCDF", "IntPDF", "IntCCDF",
+"IntTau.PDF", and "IntTau.CCDF". For instance, for a shape called "foo", the
+function names would be "fooPDF", "fooCCDF", "fooIntPDF", etc. Also, the PDF
+and CDF solutions must have the signature \code{function(tau, tau_0, tau_n,
+...)} while the remaining solutions must have the signature
+\code{function(tau_a, tau_b, tau_0, tau_n, ...)} where "..." are additional
+parameters required by the shape function.
+
+
+The power law functions include special handling for limiting cases where
+the general formula would involve division by zero:
+\itemize{
+  \item \code{powerLawPDF}, \code{powerLawCCDF}, \code{powerLawIntPDF},
+    \code{powerLawIntCCDF}: Handle the alpha = 1 limiting case
+  \item \code{powerLawIntCCDF}, \code{powerLawIntTau.PDF}: Handle the
+    alpha = 2 limiting case
+  \item \code{powerLawIntTau.CCDF}: Handles the alpha = 3 limiting case
+}
+
+All functions validate input parameters and will stop with an error if:
+\itemize{
+  \item For PDF/CCDF functions: \code{tau} is outside the range
+    \code{[tau_0, tau_n]}
+  \item For integration functions: \code{tau_a < tau_0}, \code{tau_b > tau_n},
+    or \code{tau_a > tau_b}
+}
 }

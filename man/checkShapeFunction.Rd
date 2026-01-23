@@ -6,7 +6,7 @@
 \usage{
 checkShapeFunction(
   shape,
-  tau,
+  tau_0,
   tau_n,
   ...,
   MoreArgs = NULL,
@@ -18,6 +18,8 @@ checkShapeFunction(
 \item{shape}{A shape function or character string containing the name of the
 shape function.}
 
+\item{tau_0}{Lower time bound of the definite integral of interest.}
+
 \item{tau_n}{Upper time bound of the definite integral of interest.}
 
 \item{...}{Parameters required by <shape> over which the function will be
@@ -28,14 +30,12 @@ vectorized.}
 requires a list to prevent vectorization (and associated recyling) of the
 list.}
 
+\item{integrateArgs}{A named list of optional parameters for
+\code{\link[stats]{integrate}}.}
+
 \item{valuesOnly}{When T, return value will be a numeric vector of values.
 When F, return value will be a list of integration objects (see
 \code{\link[stats]{integrate}})}
-
-\item{tau_0}{Lower time bound of the definite intergal of interest.}
-
-\item{integrationArgs}{A named list of optional parameters for
-\code{\link[stats]{integrate}}.}
 }
 \description{
 Integrate a shape function from \code{tau_0} to \code{tau_n}.

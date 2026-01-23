@@ -20,7 +20,7 @@
 #'
 #' @param shape A shape function or character string containing the name of the
 #'   shape function.
-#' @param tau_0 Lower time bound of the definite intergal of interest.
+#' @param tau_0 Lower time bound of the definite integral of interest.
 #' @param tau_n Upper time bound of the definite integral of interest.
 #' @param ... Parameters required by <shape> over which the function will be
 #'   vectorized.
@@ -28,7 +28,7 @@
 #'   <shape> without vectorization.  Use this, e.g., if the <shape> file
 #'   requires a list to prevent vectorization (and associated recyling) of the
 #'   list.
-#' @param integrationArgs A named list of optional parameters for
+#' @param integrateArgs A named list of optional parameters for
 #'   \code{\link[stats]{integrate}}.
 #' @param valuesOnly When T, return value will be a numeric vector of values.
 #'   When F, return value will be a list of integration objects (see
@@ -49,12 +49,12 @@
 #' # increase subdivisions somewhat and integration succeeds.
 #' checkShapeFunction("powerLaw", 60, 3600, alpha = 1.5, integrationArgs = list(subdivisions = 10))
 #' @export
-checkShapeFunction = function(shape, tau, tau_n, ..., MoreArgs = NULL, integrateArgs = list(), valuesOnly = F) {
+checkShapeFunction = function(shape, tau_0, tau_n, ..., MoreArgs = NULL, integrateArgs = list(), valuesOnly = F) {
   fun = getShapeFunction(shape)
   if(is.null(fun)) {
     stop("Function '", shape, "' either was not found, or does not contain accept 'tau' and 'tau_n' as parameters.")
   }
-  integrationValues(fun, lower = tau, upper = tau_n, tau_n = tau_n, ..., MoreArgs = MoreArgs, integrateArgs = integrateArgs, valuesOnly = valuesOnly)
+  integrationValues(fun, lower = tau_0, upper = tau_n, tau_n = tau_n, ..., MoreArgs = MoreArgs, integrateArgs = integrateArgs, valuesOnly = valuesOnly)
 }
 
 # Looks for a function named <paste0(shape, suffix)>.  If found, checks to be
@@ -112,4 +112,17 @@ TSZsOrigin = function(TSZs) {
   estimated = which(sapply(origin, function(attrib) "estimate" %in% names(attrib)))
   origin[estimated] = list(NULL)
   return(origin)
+}
+
+#' Calculate the tau_n that will yield a given turnover rate in the hyporheic
+#' zone
+#'
+#' @param turnover_rate The desired rate of turnover in the HZ; inverse of mean
+#'   transit time.
+#' @param tau_0_star Dimensionless fraction: tau_0/tau_n
+#' @param intCCDF intCCDF function to use (e.g., powerLawIntCCDF)
+#' @param ... parameters other than tau parameters passed to intCCDF.
+#' @export
+tau_nFromTurnoverRate <- function(turnover_rate, tau_0_star, intCCDF, ...) {
+  1/(intCCDF(tau_0_star, 1, ...) * turnover_rate)
 }

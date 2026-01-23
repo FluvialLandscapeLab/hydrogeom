@@ -282,7 +282,7 @@ getBinBreaks = function(nbins, factor, maxRT) {
   return(binBreaks)
 }
 
-# Consider exporting this fuction to allow manual estimation of unknown function value...
+# Consider exporting this function to allow manual estimation of unknown function value...
 # #' @export
 estimateFunctionValue <- function(tau_0, tau_n, storage = NULL, q = NULL, ..., shape = "powerLaw", MoreArgs = list(), integrateArgs1 = list(), integrateArgs2 = list(), forceNumeric = F, optimizeInterval = c(1,2), optimizeTol = .Machine$double.eps^0.25) {
   if(any(!(sapply(list(tau_0, tau_n, storage, q, optimizeTol, optimizeInterval), mode) %in% c("numeric", "NULL")))) stop("The parameters tau_0, tau_n, storage, q, optimizeTol, optimizeInterval must be numeric or NULL")

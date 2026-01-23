@@ -8,4 +8,4 @@ Description: Uses standard or user-defined probablity density function to calcul
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: TRUE
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.3

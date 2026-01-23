@@ -12,8 +12,8 @@ exponent(tau, tau_n, sigma)
 \arguments{
 \item{tau}{A numeric vector of residence times.}
 
-\item{tau_n}{A numeric vector (usually but not necessarily lenth == 1)
-representing the maximum \code{tau} of the hyporehic zone.}
+\item{tau_n}{A numeric vector (usually but not necessarily length == 1)
+representing the maximum \code{tau} of the hyporheic zone.}
 
 \item{alpha}{The exponent of the power law; this value is negated within the
 \code{powerLaw} function.}
@@ -34,9 +34,9 @@ Shape functions (including custom shape functions you write) must
   \code{print(exponent)} into the console.
 }
 \description{
-Transient storage zone statistics are calucated based on an assumed shape of
+Transient storage zone statistics are calculated based on an assumed shape of
 the hydrologic residence time distribution (RTD) of the hyporheic zone, which
-is the probablity density function (PDF) that a water molecule will exit the
+is the probability density function (PDF) that a water molecule will exit the
 hyporheic zone at time \code{tau}.  \code{powerLaw} and \code{exponent} are
 examples of functions that describe a basic shape for the RTD.
 }
@@ -68,7 +68,7 @@ subsurface residence time of hyporheic water.  Water that stays in the
 subsurface longer than \code{tau_n} is assumed to enter the true groundwater
 system.
 
-All paramerters for these fuctions correspond to the defintions found in
+All parameters for these functions correspond to the definitions found in
 Poole et al. (In Press) "The Hydrolgic Geometry of Hyporheic Zones in
 Expansive Coarse-Grained Alluvial Aquifers."
 }
