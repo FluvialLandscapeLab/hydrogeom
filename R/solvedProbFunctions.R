@@ -102,14 +102,16 @@ powerLawPDF = function(tau, tau_0, tau_n, alpha) {
     stop("Values of tau must satisfy tau_0 <= tau <= tau_n")
   }
 
-  if (abs(alpha - 1) < 1e-10) {
-    # Limiting case: α = 1
-    numerator = tau^(-1) - tau_n^(-1)
-    denominator = log(tau_n/tau_0) - tau_n^(-1)*(tau_n - tau_0)
-  } else {
-    numerator = tau^(-alpha) - tau_n^(-alpha)
-    denominator = (tau_n^(1-alpha) - tau_0^(1-alpha))/(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)
-  }
+  alpha1 = abs(alpha - 1) < 1e-10
+
+  numerator = ifelse(alpha1,
+    tau^(-1) - tau_n^(-1),
+    tau^(-alpha) - tau_n^(-alpha))
+
+  denominator = ifelse(alpha1,
+    log(tau_n/tau_0) - tau_n^(-1)*(tau_n - tau_0),
+    (tau_n^(1-alpha) - tau_0^(1-alpha))/(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0))
+
   return(numerator/denominator)
 }
 # powerLawPDF = function(tau, tau_0, tau_n, alpha) {
@@ -125,14 +127,16 @@ powerLawCCDF = function(tau, tau_0, tau_n, alpha) {
     stop("Values of tau must satisfy tau_0 <= tau <= tau_n")
   }
 
-  if (abs(alpha - 1) < 1e-10) {
-    # Limiting case: α = 1
-    numerator = log(tau_n/tau) - tau_n^(-1)*(tau_n - tau)
-    denominator = log(tau_n/tau_0) - tau_n^(-1)*(tau_n - tau_0)
-  } else {
-    numerator = tau_n^(1-alpha) - tau^(1-alpha) - tau_n^(-alpha)*(tau_n - tau)*(1-alpha)
-    denominator = tau_n^(1-alpha) - tau_0^(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)*(1-alpha)
-  }
+  alpha1 = abs(alpha - 1) < 1e-10
+
+  numerator = ifelse(alpha1,
+    log(tau_n/tau) - tau_n^(-1)*(tau_n - tau),
+    tau_n^(1-alpha) - tau^(1-alpha) - tau_n^(-alpha)*(tau_n - tau)*(1-alpha))
+
+  denominator = ifelse(alpha1,
+    log(tau_n/tau_0) - tau_n^(-1)*(tau_n - tau_0),
+    tau_n^(1-alpha) - tau_0^(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)*(1-alpha))
+
   return(numerator/denominator)
 }
 
@@ -149,14 +153,16 @@ powerLawIntPDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha) {
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  if (abs(alpha - 1) < 1e-10) {
-    # Limiting case: α = 1
-    numerator = log(tau_b/tau_a) - tau_n^(-1)*(tau_b - tau_a)
-    denominator = log(tau_n/tau_0) - tau_n^(-1)*(tau_n - tau_0)
-  } else {
-    numerator = tau_b^(1-alpha) - tau_a^(1-alpha) - tau_n^(-alpha)*(tau_b - tau_a)*(1-alpha)
-    denominator = tau_n^(1-alpha) - tau_0^(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)*(1-alpha)
-  }
+  alpha1 = abs(alpha - 1) < 1e-10
+
+  numerator = ifelse(alpha1,
+    log(tau_b/tau_a) - tau_n^(-1)*(tau_b - tau_a),
+    tau_b^(1-alpha) - tau_a^(1-alpha) - tau_n^(-alpha)*(tau_b - tau_a)*(1-alpha))
+
+  denominator = ifelse(alpha1,
+    log(tau_n/tau_0) - tau_n^(-1)*(tau_n - tau_0),
+    tau_n^(1-alpha) - tau_0^(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)*(1-alpha))
+
   return(numerator/denominator)
 }
 
@@ -173,23 +179,23 @@ powerLawIntCCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha) {
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  if (abs(alpha - 1) < 1e-10) {
-    # Limiting case: α = 1
-    numerator = tau_b*log(tau_n/tau_b) - tau_a*log(tau_n/tau_a) +
-                (tau_b^2 - tau_a^2)/(2*tau_n)
-    denominator = log(tau_n/tau_0) - tau_n^(-1)*(tau_n - tau_0)
-  } else if (abs(alpha - 2) < 1e-10) {
-    # Limiting case: α = 2
-    numerator = -tau_n^(-2)*(tau_b^2 - tau_a^2)/2 -
-                log(tau_b/tau_a) +
-                2*tau_n^(-1)*(tau_b - tau_a)
-    denominator = tau_n^(-1) - tau_0^(-1) + tau_n^(-2)*(tau_n - tau_0)
-  } else {
-    numerator = (1-alpha)*tau_n^(-alpha)*(tau_b^2 - tau_a^2)/2 -
-                (tau_b^(2-alpha) - tau_a^(2-alpha))/(2-alpha) +
-                alpha*tau_n^(1-alpha)*(tau_b - tau_a)
-    denominator = tau_n^(1-alpha) - tau_0^(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)*(1-alpha)
-  }
+  alpha1 = abs(alpha - 1) < 1e-10
+  alpha2 = abs(alpha - 2) < 1e-10
+
+  numerator = ifelse(alpha1,
+    tau_b*log(tau_n/tau_b) - tau_a*log(tau_n/tau_a) + (tau_b^2 - tau_a^2)/(2*tau_n),
+    ifelse(alpha2,
+      -tau_n^(-2)*(tau_b^2 - tau_a^2)/2 - log(tau_b/tau_a) + 2*tau_n^(-1)*(tau_b - tau_a),
+      (1-alpha)*tau_n^(-alpha)*(tau_b^2 - tau_a^2)/2 -
+        (tau_b^(2-alpha) - tau_a^(2-alpha))/(2-alpha) +
+        alpha*tau_n^(1-alpha)*(tau_b - tau_a)))
+
+  denominator = ifelse(alpha1,
+    log(tau_n/tau_0) - tau_n^(-1)*(tau_n - tau_0),
+    ifelse(alpha2,
+      tau_n^(-1) - tau_0^(-1) + tau_n^(-2)*(tau_n - tau_0),
+      tau_n^(1-alpha) - tau_0^(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)*(1-alpha)))
+
   return(numerator/denominator)
 }
 
@@ -206,21 +212,20 @@ powerLawIntTau.CCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  if (abs(alpha - 3) < 1e-10) {
-    # Limiting case: α = 3
-    intTau = (tau_b^2 - tau_a^2)/2
-    intTau2 = (tau_b^3 - tau_a^3)/3
-    numerator = intTau * tau_n^(-2) - log(tau_b/tau_a) -
-                (-2)*tau_n^(-3)*(tau_n * intTau - intTau2)
-    denominator = tau_n^(-2) - tau_0^(-2) - tau_n^(-3)*(tau_n - tau_0)*(-2)
-    return(numerator/denominator)
-  }
+  alpha3 = abs(alpha - 3) < 1e-10
 
   intTau = (tau_b^2 - tau_a^2)/2
   intTau2 = (tau_b^3 - tau_a^3)/3
-  numerator = intTau * tau_n^(1-alpha) - (tau_b^(3-alpha) - tau_a^(3-alpha))/(3-alpha) -
-              (1-alpha)*tau_n^(-alpha)*(tau_n * intTau - intTau2)
-  denominator = tau_n^(1-alpha) - tau_0^(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)*(1-alpha)
+
+  numerator = ifelse(alpha3,
+    intTau * tau_n^(-2) - log(tau_b/tau_a) + 2*tau_n^(-3)*(tau_n * intTau - intTau2),
+    intTau * tau_n^(1-alpha) - (tau_b^(3-alpha) - tau_a^(3-alpha))/(3-alpha) -
+      (1-alpha)*tau_n^(-alpha)*(tau_n * intTau - intTau2))
+
+  denominator = ifelse(alpha3,
+    tau_n^(-2) - tau_0^(-2) + 2*tau_n^(-3)*(tau_n - tau_0),
+    tau_n^(1-alpha) - tau_0^(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)*(1-alpha))
+
   return(numerator/denominator)
 }
 
@@ -239,17 +244,18 @@ powerLawIntTau.PDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha)
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  if (abs(alpha - 2) < 1e-10) {
-    # Limiting case: α = 2
-    numerator = log(tau_b/tau_a) - tau_n^(-2)*(tau_b^2 - tau_a^2)/2
-    denominator = tau_0^(-1) - tau_n^(-1) + tau_n^(-2)*(tau_n - tau_0)
-    return(numerator/denominator)
-  }
+  alpha2 = abs(alpha - 2) < 1e-10
 
-  normalizingConstant = (1-alpha) / (tau_n^(1-alpha) - tau_0^(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)*(1-alpha))
-  integral1 = (tau_b^(2-alpha) - tau_a^(2-alpha)) / (2-alpha)
-  integral2 = 0.5 * (tau_b^2 - tau_a^2) * tau_n^(-alpha)
-  return(normalizingConstant * (integral1 - integral2))
+  numerator = ifelse(alpha2,
+    log(tau_b/tau_a) - tau_n^(-2)*(tau_b^2 - tau_a^2)/2,
+    (1-alpha)*(tau_b^(2-alpha) - tau_a^(2-alpha))/(2-alpha) -
+      tau_n^(-alpha)*(tau_b^2 - tau_a^2)/2*(1-alpha))
+
+  denominator = ifelse(alpha2,
+    tau_0^(-1) - tau_n^(-1) + tau_n^(-2)*(tau_n - tau_0),
+    tau_n^(1-alpha) - tau_0^(1-alpha) - tau_n^(-alpha)*(tau_n - tau_0)*(1-alpha))
+
+  return(numerator/denominator)
 }
 
 # powerLawIntTau.PDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha) {
@@ -268,26 +274,22 @@ exponentPDF <- function(tau, tau_0, tau_n, sigma) {
     stop("Values of tau must satisfy tau_0 <= tau <= tau_n")
   }
 
-  if (sigma * (tau_n - tau_0) >= 400) {
-    print("Branch 1")
-    # Asymptotic: tau_n effectively infinite
-    result <- sigma * exp(-sigma * (tau - tau_0))
+  asymptotic = sigma * (tau_n - tau_0) >= 400
+  overflow = sigma * tau_0 >= 400
 
-  } else if (sigma * tau_0 >= 400) {
-    print("Branch 2")
-    # Overflow-safe
-    numerator <- sigma * (exp(-sigma * (tau - tau_n)) - 1)
-    denominator <- exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1
-    result <- numerator / denominator
+  numerator = ifelse(asymptotic,
+    sigma * exp(-sigma * (tau - tau_0)),
+    ifelse(overflow,
+      sigma * (exp(-sigma * (tau - tau_n)) - 1),
+      sigma * (exp(-sigma * tau) - exp(-sigma * tau_n))))
 
-  } else {
-    print("Branch 3")
-    # Underflow-safe
-    numerator <- sigma * (exp(-sigma * tau) - exp(-sigma * tau_n))
-    denominator <- exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)
-    result <- numerator / denominator
-  }
-  return(result)
+  denominator = ifelse(asymptotic,
+    1,
+    ifelse(overflow,
+      exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1,
+      exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)))
+
+  return(numerator/denominator)
 }
 # exponentPDF = function(tau, tau_0, tau_n, sigma) {
 #   if(any(tau > tau_n)) stop("Values of tau must be less than values of tau_n")
@@ -302,23 +304,22 @@ exponentCCDF <- function(tau, tau_0, tau_n, sigma) {
     stop("Values of tau must satisfy tau_0 <= tau <= tau_n")
   }
 
-  if (sigma * (tau_n - tau_0) >= 400) {
-    # Asymptotic: tau_n effectively infinite
-    result <- exp(-sigma * (tau - tau_0))
+  asymptotic = sigma * (tau_n - tau_0) >= 400
+  overflow = sigma * tau_0 >= 400
 
-  } else if (sigma * tau_0 >= 400) {
-    # Overflow-safe
-    numerator <- exp(-sigma * (tau - tau_n)) - sigma * (tau_n - tau) - 1
-    denominator <- exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1
-    result <- numerator / denominator
+  numerator = ifelse(asymptotic,
+    exp(-sigma * (tau - tau_0)),
+    ifelse(overflow,
+      exp(-sigma * (tau - tau_n)) - sigma * (tau_n - tau) - 1,
+      exp(-sigma * tau) - (1 + sigma * (tau_n - tau)) * exp(-sigma * tau_n)))
 
-  } else {
-    # Underflow-safe
-    numerator <- exp(-sigma * tau) - (1 + sigma * (tau_n - tau)) * exp(-sigma * tau_n)
-    denominator <- exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)
-    result <- numerator / denominator
-  }
-  return(result)
+  denominator = ifelse(asymptotic,
+    1,
+    ifelse(overflow,
+      exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1,
+      exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)))
+
+  return(numerator/denominator)
 }
 
 # exponentCCDF = function(tau, tau_0, tau_n, sigma) {
@@ -334,23 +335,22 @@ exponentIntPDF <- function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  if (sigma * (tau_n - tau_0) >= 400) {
-    # Asymptotic: tau_n effectively infinite
-    result <- exp(-sigma * (tau_a - tau_0)) - exp(-sigma * (tau_b - tau_0))
+  asymptotic = sigma * (tau_n - tau_0) >= 400
+  overflow = sigma * tau_0 >= 400
 
-  } else if (sigma * tau_0 >= 400) {
-    # Overflow-safe
-    numerator <- sigma * (tau_a - tau_b) + exp(-sigma * (tau_a - tau_n)) - exp(-sigma * (tau_b - tau_n))
-    denominator <- exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1
-    result <- numerator / denominator
+  numerator = ifelse(asymptotic,
+    exp(-sigma * (tau_a - tau_0)) - exp(-sigma * (tau_b - tau_0)),
+    ifelse(overflow,
+      sigma * (tau_a - tau_b) + exp(-sigma * (tau_a - tau_n)) - exp(-sigma * (tau_b - tau_n)),
+      exp(-sigma * tau_a) - exp(-sigma * tau_b) - sigma * (tau_b - tau_a) * exp(-sigma * tau_n)))
 
-  } else {
-    # Underflow-safe
-    numerator <- exp(-sigma * tau_a) - exp(-sigma * tau_b) - sigma * (tau_b - tau_a) * exp(-sigma * tau_n)
-    denominator <- exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)
-    result <- numerator / denominator
-  }
-  return(result)
+  denominator = ifelse(asymptotic,
+    1,
+    ifelse(overflow,
+      exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1,
+      exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)))
+
+  return(numerator/denominator)
 }# exponentIntPDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
 #   numerator = sigma*(tau_a - tau_b) + exp(-sigma*(tau_a - tau_n)) - exp(-sigma*(tau_b - tau_n))
 #   denominator = exp(-sigma * (tau_0-tau_n)) - sigma*(tau_n-tau_0) - 1
@@ -364,25 +364,24 @@ exponentIntCCDF <- function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  if (sigma * (tau_n - tau_0) >= 400) {
-    # Asymptotic: tau_n effectively infinite
-    result <- (1/sigma) * (exp(-sigma * (tau_a - tau_0)) - exp(-sigma * (tau_b - tau_0)))
+  asymptotic = sigma * (tau_n - tau_0) >= 400
+  overflow = sigma * tau_0 >= 400
 
-  } else if (sigma * tau_0 >= 400) {
-    # Overflow-safe
-    numerator <- (1/sigma) * (exp(-sigma * (tau_a - tau_n)) - exp(-sigma * (tau_b - tau_n))) +
-      (tau_b - tau_a) * (sigma/2 * (tau_a + tau_b - 2*tau_n) - 1)
-    denominator <- exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1
-    result <- numerator / denominator
+  numerator = ifelse(asymptotic,
+    (1/sigma) * (exp(-sigma * (tau_a - tau_0)) - exp(-sigma * (tau_b - tau_0))),
+    ifelse(overflow,
+      (1/sigma) * (exp(-sigma * (tau_a - tau_n)) - exp(-sigma * (tau_b - tau_n))) +
+        (tau_b - tau_a) * (sigma/2 * (tau_a + tau_b - 2*tau_n) - 1),
+      (1/sigma) * (exp(-sigma * tau_a) - exp(-sigma * tau_b)) +
+        (tau_b - tau_a) * (sigma/2 * (tau_a + tau_b - 2*tau_n) - 1) * exp(-sigma * tau_n)))
 
-  } else {
-    # Underflow-safe
-    numerator <- (1/sigma) * (exp(-sigma * tau_a) - exp(-sigma * tau_b)) +
-      (tau_b - tau_a) * (sigma/2 * (tau_a + tau_b - 2*tau_n) - 1) * exp(-sigma * tau_n)
-    denominator <- exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)
-    result <- numerator / denominator
-  }
-  return(result)
+  denominator = ifelse(asymptotic,
+    1,
+    ifelse(overflow,
+      exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1,
+      exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)))
+
+  return(numerator/denominator)
 }# exponentIntCCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
 #   numerator1 = 0.5*sigma*(tau_a - tau_b)*(tau_a + tau_b - 2*tau_n)
 #   numerator2 = (1/sigma) * (exp(-sigma*(tau_a - tau_n)) - exp(-sigma*(tau_b - tau_n)))
@@ -400,28 +399,27 @@ exponentIntTau.PDF <- function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  if (sigma * (tau_n - tau_0) >= 400) {
-    # Asymptotic: tau_n effectively infinite
-    result <- (tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_0)) -
-      (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_0))
+  asymptotic = sigma * (tau_n - tau_0) >= 400
+  overflow = sigma * tau_0 >= 400
 
-  } else if (sigma * tau_0 >= 400) {
-    # Overflow-safe
-    numerator <- (tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_n)) -
-      (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_n)) -
-      sigma * (tau_b^2 - tau_a^2) / 2
-    denominator <- exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1
-    result <- numerator / denominator
+  numerator = ifelse(asymptotic,
+    (tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_0)) -
+      (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_0)),
+    ifelse(overflow,
+      (tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_n)) -
+        (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_n)) -
+        sigma * (tau_b^2 - tau_a^2) / 2,
+      (tau_a + 1/sigma) * exp(-sigma * tau_a) -
+        (tau_b + 1/sigma) * exp(-sigma * tau_b) -
+        sigma * (tau_b^2 - tau_a^2) / 2 * exp(-sigma * tau_n)))
 
-  } else {
-    # Underflow-safe
-    numerator <- (tau_a + 1/sigma) * exp(-sigma * tau_a) -
-      (tau_b + 1/sigma) * exp(-sigma * tau_b) -
-      sigma * (tau_b^2 - tau_a^2) / 2 * exp(-sigma * tau_n)
-    denominator <- exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)
-    result <- numerator / denominator
-  }
-  return(result)
+  denominator = ifelse(asymptotic,
+    1,
+    ifelse(overflow,
+      exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1,
+      exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)))
+
+  return(numerator/denominator)
 }# exponentIntTau.PDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
 #   numerator1 = (tau_a*sigma + 1)*exp((tau_a - tau_n)*-sigma)
 #   numerator2 = (tau_b*sigma + 1)*exp((tau_b - tau_n)*-sigma)
@@ -439,30 +437,29 @@ exponentIntTau.CCDF <- function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigm
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  if (sigma * (tau_n - tau_0) >= 400) {
-    # Asymptotic: tau_n effectively infinite
-    result <- (1/sigma) * ((tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_0)) -
-                             (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_0)))
+  asymptotic = sigma * (tau_n - tau_0) >= 400
+  overflow = sigma * tau_0 >= 400
 
-  } else if (sigma * tau_0 >= 400) {
-    # Overflow-safe
-    numerator <- (1/sigma) * ((tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_n)) -
-                                (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_n))) +
-      sigma * (tau_b^3 - tau_a^3) / 3 -
-      (1 + sigma * tau_n) * (tau_b^2 - tau_a^2) / 2
-    denominator <- exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1
-    result <- numerator / denominator
+  numerator = ifelse(asymptotic,
+    (1/sigma) * ((tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_0)) -
+                 (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_0))),
+    ifelse(overflow,
+      (1/sigma) * ((tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_n)) -
+                   (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_n))) +
+        sigma * (tau_b^3 - tau_a^3) / 3 -
+        (1 + sigma * tau_n) * (tau_b^2 - tau_a^2) / 2,
+      (1/sigma) * ((tau_a + 1/sigma) * exp(-sigma * tau_a) -
+                   (tau_b + 1/sigma) * exp(-sigma * tau_b)) +
+        (sigma * (tau_b^3 - tau_a^3) / 3 -
+         (1 + sigma * tau_n) * (tau_b^2 - tau_a^2) / 2) * exp(-sigma * tau_n)))
 
-  } else {
-    # Underflow-safe
-    numerator <- (1/sigma) * ((tau_a + 1/sigma) * exp(-sigma * tau_a) -
-                                (tau_b + 1/sigma) * exp(-sigma * tau_b)) +
-      (sigma * (tau_b^3 - tau_a^3) / 3 -
-         (1 + sigma * tau_n) * (tau_b^2 - tau_a^2) / 2) * exp(-sigma * tau_n)
-    denominator <- exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)
-    result <- numerator / denominator
-  }
-  return(result)
+  denominator = ifelse(asymptotic,
+    1,
+    ifelse(overflow,
+      exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1,
+      exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n)))
+
+  return(numerator/denominator)
 }
 # exponentIntTau.CCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
 #   numerator1a = (sigma*tau_a + 1)*exp(-sigma*(tau_a - tau_n))

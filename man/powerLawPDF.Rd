@@ -33,11 +33,11 @@ exponentCCDF(tau, tau_0, tau_n, sigma)
 
 exponentIntPDF(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma)
 
-exponentIntCCDF(tau_a, tau_b, tau_0, tau_n, sigma)
+exponentIntCCDF(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma)
 
 exponentIntTau.PDF(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma)
 
-exponentIntTau.CCDF(tau_a, tau_b, tau_0, tau_n, sigma)
+exponentIntTau.CCDF(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma)
 }
 \arguments{
 \item{tau}{A residence time for which the PDF or CCDF value is desired.}
