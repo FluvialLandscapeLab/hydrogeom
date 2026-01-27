@@ -91,6 +91,9 @@
 #'
 #' All functions validate input parameters and will stop with an error if:
 #' \itemize{
+#'   \item For power law functions: \code{tau_0 <= 0} (power law requires
+#'     \code{tau_0 > 0} to avoid division by zero when computing
+#'     \code{tau_0^(-alpha)})
 #'   \item For PDF/CCDF functions: \code{tau} is outside the range
 #'     \code{[tau_0, tau_n]}
 #'   \item For integration functions: \code{tau_a < tau_0}, \code{tau_b > tau_n},
@@ -98,6 +101,9 @@
 #' }
 #' @export
 powerLawPDF = function(tau, tau_0, tau_n, alpha) {
+  if (any(tau_0 <= 0)) {
+    stop("tau_0 must be greater than 0 for power law functions")
+  }
   if (any(tau < tau_0 | tau > tau_n)) {
     stop("Values of tau must satisfy tau_0 <= tau <= tau_n")
   }
@@ -129,6 +135,9 @@ powerLawPDF = function(tau, tau_0, tau_n, alpha) {
 #' @rdname powerLawPDF
 #' @export
 powerLawCCDF = function(tau, tau_0, tau_n, alpha) {
+  if (any(tau_0 <= 0)) {
+    stop("tau_0 must be greater than 0 for power law functions")
+  }
   if (any(tau < tau_0 | tau > tau_n)) {
     stop("Values of tau must satisfy tau_0 <= tau <= tau_n")
   }
@@ -157,6 +166,9 @@ powerLawCCDF = function(tau, tau_0, tau_n, alpha) {
 #' @rdname powerLawPDF
 #' @export
 powerLawIntPDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha) {
+  if (any(tau_0 <= 0)) {
+    stop("tau_0 must be greater than 0 for power law functions")
+  }
   if (any(tau_a < tau_0 | tau_b > tau_n | tau_a > tau_b)) {
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
@@ -185,6 +197,9 @@ powerLawIntPDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha) {
 #' @rdname powerLawPDF
 #' @export
 powerLawIntCCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha) {
+  if (any(tau_0 <= 0)) {
+    stop("tau_0 must be greater than 0 for power law functions")
+  }
   if (any(tau_a < tau_0 | tau_b > tau_n | tau_a > tau_b)) {
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
@@ -224,6 +239,9 @@ powerLawIntCCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha) {
 #' @rdname powerLawPDF
 #' @export
 powerLawIntTau.CCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha) {
+  if (any(tau_0 <= 0)) {
+    stop("tau_0 must be greater than 0 for power law functions")
+  }
   if (any(tau_a < tau_0 | tau_b > tau_n | tau_a > tau_b)) {
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
@@ -258,6 +276,9 @@ powerLawIntTau.CCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha
 #' @rdname powerLawPDF
 #' @export
 powerLawIntTau.PDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha) {
+  if (any(tau_0 <= 0)) {
+    stop("tau_0 must be greater than 0 for power law functions")
+  }
   if (any(tau_a < tau_0 | tau_b > tau_n | tau_a > tau_b)) {
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }

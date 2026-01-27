@@ -139,6 +139,9 @@ the general formula would involve division by zero:
 
 All functions validate input parameters and will stop with an error if:
 \itemize{
+  \item For power law functions: \code{tau_0 <= 0} (power law requires
+    \code{tau_0 > 0} to avoid division by zero when computing
+    \code{tau_0^(-alpha)})
   \item For PDF/CCDF functions: \code{tau} is outside the range
     \code{[tau_0, tau_n]}
   \item For integration functions: \code{tau_a < tau_0}, \code{tau_b > tau_n},

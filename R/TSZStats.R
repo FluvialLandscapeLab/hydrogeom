@@ -236,19 +236,39 @@ getEvenBinBreaks = function(nBins, tau_0, tau_n, ..., shape = "powerLaw", MoreAr
   storageIntegration = autoSolution(suffix = suffix, shape = shape, tau_0 = tau_0, tau_n = tau_n, tau = tau_0, tau_b = tau_n, ...,
                                     MoreArgs = MoreArgs, integrateArgs1 = integrateArgs1, integrateArgs2 = integrateArgs2, forceNumeric = forceNumeric)
   target = storageIntegration/nBins
-  binError = function(x, ...) {
+
+  # Use uniroot to find where IntCCDF(x) - target*i = 0
+  # This is more robust than optimize for functions that saturate quickly
+  binDiff = function(x, ...) {
     storageIntegration = autoSolution(suffix = suffix, shape = shape, tau_0 = tau_0, tau_n = tau_n, tau = tau_0, tau_b = x, ...,
                                       MoreArgs = MoreArgs, integrateArgs1 = integrateArgs1, integrateArgs2 = integrateArgs2, forceNumeric = forceNumeric)
-    return((target * i - storageIntegration)^2)
+    return(storageIntegration - target * i)
   }
   TSZs = numeric(0)
   if(nBins > 1) {
     for (i in 1:(nBins-1)) {
-      optimal = optimize(binError, ..., lower = tau_0, upper = tau_n)
-      TSZs[i] = optimal$minimum
+      root = uniroot(binDiff, ..., lower = tau_0, upper = tau_n)
+      TSZs[i] = root$root
     }
   }
   return(c(tau_0, TSZs, tau_n))
+
+  # # Old code using optimize - fails when distribution saturates quickly
+  # # (e.g., exponent with large sigma) because optimize starts in the middle
+  # # of the interval where the function is flat
+  # binError = function(x, ...) {
+  #   storageIntegration = autoSolution(suffix = suffix, shape = shape, tau_0 = tau_0, tau_n = tau_n, tau = tau_0, tau_b = x, ...,
+  #                                     MoreArgs = MoreArgs, integrateArgs1 = integrateArgs1, integrateArgs2 = integrateArgs2, forceNumeric = forceNumeric)
+  #   return((target * i - storageIntegration)^2)
+  # }
+  # TSZs = numeric(0)
+  # if(nBins > 1) {
+  #   for (i in 1:(nBins-1)) {
+  #     optimal = optimize(binError, ..., lower = tau_0, upper = tau_n)
+  #     TSZs[i] = optimal$minimum
+  #   }
+  # }
+  # return(c(tau_0, TSZs, tau_n))
 }
 
 getBinBreaks = function(nbins, factor, maxRT) {
