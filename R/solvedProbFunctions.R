@@ -292,7 +292,7 @@ powerLawIntTau.PDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha)
   if(any(alt_calc)) {
     alt_calc = alt_calc == rep(TRUE, length(result))
     alt_result = (log(tau_b/tau_a) - tau_n^(-2)*(tau_b^2 - tau_a^2)/2) /
-      (tau_0^(-1) - tau_n^(-1) + tau_n^(-2)*(tau_n - tau_0)) * rep(1, length(alpha)) # force recycling to length of alpha
+      (tau_0^(-1) - tau_n^(-1) - tau_n^(-2)*(tau_n - tau_0)) * rep(1, length(alpha)) # force recycling to length of alpha
     result[alt_calc] = alt_result[alt_calc]
   }
 
@@ -308,6 +308,15 @@ powerLawIntTau.PDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, alpha)
 #   return(normalizingConstant * (integral1 - integral2))
 # }
 
+# NOTE on the exponent* functions: every exponential below is written as
+# exp(-sigma * (x - tau_0)) for some x in [tau_0, tau_n].  That is the general
+# formula with exp(-sigma * tau_0) factored out of numerator and denominator.
+# Because x >= tau_0, every exponent is <= 0 and every exp() is in [0, 1], so
+# nothing can overflow regardless of sigma, tau_0, or tau_n.  When
+# sigma * (tau_n - tau_0) is large, exp(-sigma * (tau_n - tau_0)) underflows to
+# 0 and the formulas reduce to the infinite-tail (asymptotic) solutions on their
+# own.  No special-case branches are needed.
+
 #' @rdname powerLawPDF
 #' @export
 exponentPDF <- function(tau, tau_0, tau_n, sigma) {
@@ -315,30 +324,8 @@ exponentPDF <- function(tau, tau_0, tau_n, sigma) {
     stop("Values of tau must satisfy tau_0 <= tau <= tau_n")
   }
 
-  # General formula (underflow-safe: works when sigma*tau_0 < 400)
-  result = (sigma * (exp(-sigma * tau) - exp(-sigma * tau_n))) /
-    (exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n))
-
-  # Asymptotic case: when sigma*(tau_n - tau_0) >= 400, tau_n is effectively infinite
-  asymptotic = sigma * (tau_n - tau_0) >= 400
-  if(any(asymptotic)) {
-    # rep(x, length(result)) ensures proper recycling if sigma is not the longest vector
-    asymptotic = asymptotic == rep(TRUE, length(result))
-    # rep(0, length(tau_n)) ensures proper recycling if tau_n (not used here) is the longest vector
-    asymptotic_result = sigma * exp(-sigma * (tau - tau_0)) + rep(0, length(result))
-    result[asymptotic] = asymptotic_result[asymptotic]
-  }
-
-  # Overflow case: when sigma*tau_0 >= 400, exp(-sigma*tau_0) underflows to 0
-  overflow = sigma * tau_0 >= 400
-  if(any(overflow)) {
-    overflow = overflow == rep(TRUE, length(result))
-    overflow_result = (sigma * (exp(-sigma * (tau - tau_n)) - 1)) /
-      (exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1)
-    result[overflow] = overflow_result[overflow]
-  }
-
-  return(result)
+  (sigma * (exp(-sigma * (tau - tau_0)) - exp(-sigma * (tau_n - tau_0)))) /
+    (1 - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * (tau_n - tau_0)))
 }
 # exponentPDF = function(tau, tau_0, tau_n, sigma) {
 #   if(any(tau > tau_n)) stop("Values of tau must be less than values of tau_n")
@@ -353,30 +340,8 @@ exponentCCDF <- function(tau, tau_0, tau_n, sigma) {
     stop("Values of tau must satisfy tau_0 <= tau <= tau_n")
   }
 
-  # General formula (underflow-safe: works when sigma*tau_0 < 400)
-  result = (exp(-sigma * tau) - (1 + sigma * (tau_n - tau)) * exp(-sigma * tau_n)) /
-    (exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n))
-
-  # Asymptotic case: when sigma*(tau_n - tau_0) >= 400, tau_n is effectively infinite
-  asymptotic = sigma * (tau_n - tau_0) >= 400
-  if(any(asymptotic)) {
-    # rep(x, length(result)) ensures proper recycling if sigma is not the longest vector
-    asymptotic = asymptotic == rep(TRUE, length(result))
-    # rep(0, length(tau_n)) ensures proper recycling if tau_n (not used here) is the longest vector
-    asymptotic_result = exp(-sigma * (tau - tau_0)) + rep(0, length(tau_n))
-    result[asymptotic] = asymptotic_result[asymptotic]
-  }
-
-  # Overflow case: when sigma*tau_0 >= 400, exp(-sigma*tau_0) underflows to 0
-  overflow = sigma * tau_0 >= 400
-  if(any(overflow)) {
-    overflow = overflow == rep(TRUE, length(result))
-    overflow_result = (exp(-sigma * (tau - tau_n)) - sigma * (tau_n - tau) - 1) /
-      (exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1)
-    result[overflow] = overflow_result[overflow]
-  }
-
-  return(result)
+  (exp(-sigma * (tau - tau_0)) - (1 + sigma * (tau_n - tau)) * exp(-sigma * (tau_n - tau_0))) /
+    (1 - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * (tau_n - tau_0)))
 }
 
 # exponentCCDF = function(tau, tau_0, tau_n, sigma) {
@@ -392,31 +357,11 @@ exponentIntPDF <- function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  # General formula (underflow-safe: works when sigma*tau_0 < 400)
-  result = (exp(-sigma * tau_a) - exp(-sigma * tau_b) - sigma * (tau_b - tau_a) * exp(-sigma * tau_n)) /
-    (exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n))
-
-  # Asymptotic case: when sigma*(tau_n - tau_0) >= 400, tau_n is effectively infinite
-  asymptotic = sigma * (tau_n - tau_0) >= 400
-  if(any(asymptotic)) {
-    # rep(x, length(result)) ensures proper recycling if sigma is not the longest vector
-    asymptotic = asymptotic == rep(TRUE, length(result))
-    # rep(0, length(tau_n)) ensures proper recycling if tau_n (not used here) is the longest vector
-    asymptotic_result = exp(-sigma * (tau_a - tau_0)) - exp(-sigma * (tau_b - tau_0)) + rep(0, length(tau_n))
-    result[asymptotic] = asymptotic_result[asymptotic]
-  }
-
-  # Overflow case: when sigma*tau_0 >= 400, exp(-sigma*tau_0) underflows to 0
-  overflow = sigma * tau_0 >= 400
-  if(any(overflow)) {
-    overflow = overflow == rep(TRUE, length(result))
-    overflow_result = (sigma * (tau_a - tau_b) + exp(-sigma * (tau_a - tau_n)) - exp(-sigma * (tau_b - tau_n))) /
-      (exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1)
-    result[overflow] = overflow_result[overflow]
-  }
-
-  return(result)
-}# exponentIntPDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
+  (exp(-sigma * (tau_a - tau_0)) - exp(-sigma * (tau_b - tau_0)) -
+      sigma * (tau_b - tau_a) * exp(-sigma * (tau_n - tau_0))) /
+    (1 - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * (tau_n - tau_0)))
+}
+# exponentIntPDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
 #   numerator = sigma*(tau_a - tau_b) + exp(-sigma*(tau_a - tau_n)) - exp(-sigma*(tau_b - tau_n))
 #   denominator = exp(-sigma * (tau_0-tau_n)) - sigma*(tau_n-tau_0) - 1
 #   return(numerator/denominator)
@@ -429,33 +374,11 @@ exponentIntCCDF <- function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  # General formula (underflow-safe: works when sigma*tau_0 < 400)
-  result = ((1/sigma) * (exp(-sigma * tau_a) - exp(-sigma * tau_b)) +
-      (tau_b - tau_a) * (sigma/2 * (tau_a + tau_b - 2*tau_n) - 1) * exp(-sigma * tau_n)) /
-    (exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n))
-
-  # Asymptotic case: when sigma*(tau_n - tau_0) >= 400, tau_n is effectively infinite
-  asymptotic = sigma * (tau_n - tau_0) >= 400
-  if(any(asymptotic)) {
-    # rep(x, length(result)) ensures proper recycling if sigma is not the longest vector
-    asymptotic = asymptotic == rep(TRUE, length(result))
-    # rep(0, length(tau_n)) ensures proper recycling if tau_n (not used here) is the longest vector
-    asymptotic_result = (1/sigma) * (exp(-sigma * (tau_a - tau_0)) - exp(-sigma * (tau_b - tau_0))) + rep(0, length(tau_n))
-    result[asymptotic] = asymptotic_result[asymptotic]
-  }
-
-  # Overflow case: when sigma*tau_0 >= 400, exp(-sigma*tau_0) underflows to 0
-  overflow = sigma * tau_0 >= 400
-  if(any(overflow)) {
-    overflow = overflow == rep(TRUE, length(result))
-    overflow_result = ((1/sigma) * (exp(-sigma * (tau_a - tau_n)) - exp(-sigma * (tau_b - tau_n))) +
-        (tau_b - tau_a) * (sigma/2 * (tau_a + tau_b - 2*tau_n) - 1)) /
-      (exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1)
-    result[overflow] = overflow_result[overflow]
-  }
-
-  return(result)
-}# exponentIntCCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
+  ((1/sigma) * (exp(-sigma * (tau_a - tau_0)) - exp(-sigma * (tau_b - tau_0))) +
+      (tau_b - tau_a) * (sigma/2 * (tau_a + tau_b - 2*tau_n) - 1) * exp(-sigma * (tau_n - tau_0))) /
+    (1 - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * (tau_n - tau_0)))
+}
+# exponentIntCCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
 #   numerator1 = 0.5*sigma*(tau_a - tau_b)*(tau_a + tau_b - 2*tau_n)
 #   numerator2 = (1/sigma) * (exp(-sigma*(tau_a - tau_n)) - exp(-sigma*(tau_b - tau_n)))
 #
@@ -472,36 +395,12 @@ exponentIntTau.PDF <- function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  # General formula (underflow-safe: works when sigma*tau_0 < 400)
-  result = ((tau_a + 1/sigma) * exp(-sigma * tau_a) -
-      (tau_b + 1/sigma) * exp(-sigma * tau_b) -
-      sigma * (tau_b^2 - tau_a^2) / 2 * exp(-sigma * tau_n)) /
-    (exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n))
-
-  # Asymptotic case: when sigma*(tau_n - tau_0) >= 400, tau_n is effectively infinite
-  asymptotic = sigma * (tau_n - tau_0) >= 400
-  if(any(asymptotic)) {
-    # rep(x, length(result)) ensures proper recycling if sigma is not the longest vector
-    asymptotic = asymptotic == rep(TRUE, length(result))
-    # rep(0, length(tau_n)) ensures proper recycling if tau_n (not used here) is the longest vector
-    asymptotic_result = (tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_0)) -
-      (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_0)) + rep(0, length(tau_n))
-    result[asymptotic] = asymptotic_result[asymptotic]
-  }
-
-  # Overflow case: when sigma*tau_0 >= 400, exp(-sigma*tau_0) underflows to 0
-  overflow = sigma * tau_0 >= 400
-  if(any(overflow)) {
-    overflow = overflow == rep(TRUE, length(result))
-    overflow_result = ((tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_n)) -
-        (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_n)) -
-        sigma * (tau_b^2 - tau_a^2) / 2) /
-      (exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1)
-    result[overflow] = overflow_result[overflow]
-  }
-
-  return(result)
-}# exponentIntTau.PDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
+  ((tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_0)) -
+      (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_0)) -
+      sigma * (tau_b^2 - tau_a^2) / 2 * exp(-sigma * (tau_n - tau_0))) /
+    (1 - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * (tau_n - tau_0)))
+}
+# exponentIntTau.PDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
 #   numerator1 = (tau_a*sigma + 1)*exp((tau_a - tau_n)*-sigma)
 #   numerator2 = (tau_b*sigma + 1)*exp((tau_b - tau_n)*-sigma)
 #   numerator3 = sigma^2 * (tau_b^2-tau_a^2)/2
@@ -518,37 +417,11 @@ exponentIntTau.CCDF <- function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigm
     stop("Values must satisfy tau_0 <= tau_a <= tau_b <= tau_n")
   }
 
-  # General formula (underflow-safe: works when sigma*tau_0 < 400)
-  result = ((1/sigma) * ((tau_a + 1/sigma) * exp(-sigma * tau_a) -
-                   (tau_b + 1/sigma) * exp(-sigma * tau_b)) +
+  ((1/sigma) * ((tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_0)) -
+                   (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_0))) +
         (sigma * (tau_b^3 - tau_a^3) / 3 -
-         (1 + sigma * tau_n) * (tau_b^2 - tau_a^2) / 2) * exp(-sigma * tau_n)) /
-    (exp(-sigma * tau_0) - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * tau_n))
-
-  # Asymptotic case: when sigma*(tau_n - tau_0) >= 400, tau_n is effectively infinite
-  asymptotic = sigma * (tau_n - tau_0) >= 400
-  if(any(asymptotic)) {
-    # rep(x, length(result)) ensures proper recycling if sigma is not the longest vector
-    asymptotic = asymptotic == rep(TRUE, length(result))
-    # rep(0, length(tau_n)) ensures proper recycling if tau_n (not used here) is the longest vector
-    asymptotic_result = (1/sigma) * ((tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_0)) -
-                 (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_0))) + rep(0, length(tau_n))
-    result[asymptotic] = asymptotic_result[asymptotic]
-  }
-
-  # Overflow case: when sigma*tau_0 >= 400, exp(-sigma*tau_0) underflows to 0
-  overflow = sigma * tau_0 >= 400
-  if(any(overflow)) {
-    overflow = overflow == rep(TRUE, length(result))
-    overflow_result = ((1/sigma) * ((tau_a + 1/sigma) * exp(-sigma * (tau_a - tau_n)) -
-                   (tau_b + 1/sigma) * exp(-sigma * (tau_b - tau_n))) +
-        sigma * (tau_b^3 - tau_a^3) / 3 -
-        (1 + sigma * tau_n) * (tau_b^2 - tau_a^2) / 2) /
-      (exp(-sigma * (tau_0 - tau_n)) - sigma * (tau_n - tau_0) - 1)
-    result[overflow] = overflow_result[overflow]
-  }
-
-  return(result)
+         (1 + sigma * tau_n) * (tau_b^2 - tau_a^2) / 2) * exp(-sigma * (tau_n - tau_0))) /
+    (1 - (1 + sigma * (tau_n - tau_0)) * exp(-sigma * (tau_n - tau_0)))
 }
 # exponentIntTau.CCDF = function(tau_a, tau_b, tau_0 = tau_a, tau_n = tau_b, sigma) {
 #   numerator1a = (sigma*tau_a + 1)*exp(-sigma*(tau_a - tau_n))
